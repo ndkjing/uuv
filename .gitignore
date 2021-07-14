@@ -1,0 +1,9 @@
+/statics/*.stl
+/statics/**/*.jpg
+/build
+/build/
+build
+build/
+build/*
+.idea
+.idea/
