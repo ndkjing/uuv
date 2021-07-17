@@ -2,9 +2,9 @@
 数据管理
 """
 import time
-import tcpServer
-import dataDefine
-import joystick
+from common import tcpServer
+from driver import joystick
+import config
 import threading
 
 
@@ -22,7 +22,10 @@ def Singleton(cls):
 @Singleton
 class DataManager(object):
     def __init__(self, only_joystick=False):
-        self.tcp_server_obj = tcpServer.TcpServer()
+        if config.tcp_server_type==1:
+            self.tcp_server_obj = tcpServer.TcpServerQt()
+        else:
+            self.tcp_server_obj = tcpServer.TcpServer()
         self.joystick_obj = joystick.Jostick()
         self.move = 0
         self.speed = 0.5  # 速度
@@ -41,7 +44,6 @@ class DataManager(object):
         self.b_leak = None  # 是否漏水
         self.is_start = 0  # 是否已开启
         self.only_joystick = only_joystick
-        # self.init_run()
 
     def init_run(self):
         t1 = threading.Thread(target=self.tcp_server_obj.wait_connect)
@@ -90,26 +92,27 @@ class DataManager(object):
             else:
                 move_info = 'move%sz' % self.move
                 speed_info = 'speed%sz' % self.speed
+            send_data_list = []
             camera_info = 'camera%sz' % self.joystick_obj.camera_steer
             light_info = 'light%sz' % self.joystick_obj.b_light
             sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
             arm_info = 'arm%sz' % self.joystick_obj.arm
             pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
             backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
+            send_data_method = 1
+            send_data_list.append(move_info)
+            send_data_list.append(camera_info)
+            send_data_list.append(light_info)
+            send_data_list.append(sonar_info)
+            send_data_list.append(arm_info)
+            send_data_list.append(pid_info)
             try:
-                self.tcp_server_obj.client.send(move_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(speed_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(camera_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(light_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(sonar_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(arm_info.encode())
-                time.sleep(0.01)
-                self.tcp_server_obj.client.send(pid_info.encode())
+                if send_data_method == 1:
+                    for data in send_data_list:
+                        self.tcp_server_obj.write_data(data)
+                        time.sleep(0.01)
+                else:
+                    pass
             except ConnectionResetError as e:
                 self.tcp_server_obj.client.close()
             if b_once:
@@ -124,6 +127,7 @@ class DataManager(object):
             recv_data = self.tcp_server_obj.client.recv(1024)
             print("[*] Received: %s" % recv_data)
             # TODO 解析tcp数据复制给 compass等
+
 
 if __name__ == '__main__':
     data_manager_obj = DataManager()

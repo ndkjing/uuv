@@ -4,10 +4,10 @@
 import time
 import streamlit as st
 import threading
-import dataManager
+from dataManager import data_manager
 
 time.sleep(0.1)
-data_manager_obj = dataManager.DataManager()
+data_manager_obj = data_manager.DataManager()
 forward = st.button('前进', key='1')
 backward = st.button('后退', key='2')
 left = st.button('左转')

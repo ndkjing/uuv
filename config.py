@@ -1,5 +1,5 @@
 import os
-import utils
+from common import utils
 
 root_path = os.path.dirname(os.path.abspath(__file__))
 print('root_path', root_path)
@@ -15,3 +15,5 @@ if not os.path.exists(save_videos_dir):
     os.mkdir(save_videos_dir)
 tcp_server_ip = utils.get_host_ip()
 tcp_server_port = 9002
+#1 qt tcp 2 tcp
+tcp_server_type = 1

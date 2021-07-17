@@ -2,26 +2,22 @@
 import sys
 import os
 import time
-import main_ui
-import setting_ui
-from PyQt5.QtWidgets import QApplication, QDialog, QMainWindow
-from PyQt5 import QtWidgets, QtCore, QtGui
+from ui import main_ui, setting_ui, angle
+from PyQt5.QtWidgets import QDialog, QMainWindow
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-import requests
 import cv2
-from PyQt5.QtOpenGL import QGLWidget
 # from vtk import *
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import numpy as np
 from stl import mesh
 import pyqtgraph.opengl as gl
 
-import dataManager
+from dataManager import data_manager
 import config
 from storage import save_data
-import angle
+
 
 class SettingWindow(QDialog):
     def __init__(self):
@@ -32,6 +28,7 @@ class SettingWindow(QDialog):
 
 class WorkerThread(QThread):
     finish = pyqtSignal(int)
+
     def __init__(self, parent=None, run_func=None):
         super().__init__(parent)
         self.run_func = run_func
@@ -45,7 +42,7 @@ class MainDialog(QMainWindow):
         super(QMainWindow, self).__init__(parent)
         self.ui = main_ui.Ui_MainWindow()
         self.ui.setupUi(self)
-        self.datamanager_obj = dataManager.DataManager()
+        self.datamanager_obj = data_manager.DataManager()
         self.timer = QTimer()
         self.timer.timeout.connect(self.send_data)
         self.timer.timeout.connect(self.update_base_info)
@@ -56,8 +53,12 @@ class MainDialog(QMainWindow):
         # 显示视频
         self.open_flag = True
         self.painter = QPainter(self)
-        front_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1657329096&id=335347591388602368&t=e1dd42835fd9bece1478d0d19d68b727dafbb8630d96a1272d65c3f389dd9bca&ev=100'
-        back_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1657329096&id=335347591388602368&t=e1dd42835fd9bece1478d0d19d68b727dafbb8630d96a1272d65c3f389dd9bca&ev=100'
+        front_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1657329096&id' \
+                          '=335347591388602368&t=e1dd42835fd9bece1478d0d19d68b727dafbb8630d96a1272d65c3f389dd9bca&ev' \
+                          '=100 '
+        back_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_2?expire=1657506533&id' \
+                         '=336091817970577408&t=d537867dd4f403d5b162f51e73011ee8f30670d6abac8d5dc6807f23ab98f6f6&ev' \
+                         '=100 '
         # front_video_src = r'F:\软件相关\开发软件\ffmpeg\bin\ffmpeg_test.flv'
         # back_video_src = r'F:\软件相关\开发软件\ffmpeg\bin\ffmpeg_test.flv'
         self.front_video_stream = cv2.VideoCapture(front_video_src)
@@ -79,9 +80,9 @@ class MainDialog(QMainWindow):
         self.frame_front = None
         self.frame_back = None
         # 长时间的工作放到这里
-        self.tcp_work = WorkerThread(parent=None, run_func=self.datamanager_obj.tcp_server_obj.wait_connect)
+        # self.tcp_work = WorkerThread(parent=None, run_func=self.datamanager_obj.tcp_server_obj.wait_connect)
         # self.work.finish.connect(self.showResult)
-        self.tcp_work.start()
+        # self.tcp_work.start()
         self.joystick_work = WorkerThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
         self.joystick_work.finish.connect(self.showResult)
         self.joystick_work.start()
@@ -292,7 +293,7 @@ class MainDialog(QMainWindow):
         m = mesh.Mesh.from_file('statics/holecube.stl')
         points = m.points.reshape(-1, 3)
         faces = np.arange(points.shape[0]).reshape(-1, 3)
-        meshdata = gl.MeshData(vertexes=points, faces=faces,faceColors=[0.5,0.5,0.5,0.5])
+        meshdata = gl.MeshData(vertexes=points, faces=faces, faceColors=[0.5, 0.5, 0.5, 0.5])
         mesh_obj = gl.GLMeshItem(meshdata=meshdata, smooth=True, drawFaces=True, drawEdges=True,
                                  edgeColor=(1, 1, 1, 1))
         self.viewer.addItem(mesh_obj)
@@ -315,6 +316,26 @@ class MainDialog(QMainWindow):
             self.ui.front_video_label.setPixmap(QPixmap.fromImage(self.Qframe_front))
             self.ui.back_video_label.setPixmap(QPixmap.fromImage(self.Qframe_back))
             self.update()
+
+    def keyPressEvent(self, keyevent):
+        if keyevent.text() in ['w','W']:
+            self.datamanager_obj.move = 1
+        elif keyevent.text() in ['a','A']:
+            self.datamanager_obj.move = 3
+        elif keyevent.text() in ['s','S']:
+            self.datamanager_obj.move =2
+        elif keyevent.text() in ['d','D']:
+            self.datamanager_obj.move =4
+        elif keyevent.text() in ['q','Q']:
+            self.datamanager_obj.move =5
+        elif keyevent.text() in ['e','E']:
+            self.datamanager_obj.move =6
+        elif keyevent.text() in ['z','Z']:
+            self.datamanager_obj.move = 7
+        elif keyevent.text() in ['c','C']:
+            self.datamanager_obj.move =8
+        elif keyevent.text() in ['x','X']:
+            self.datamanager_obj.move = 0
 
 
 if __name__ == '__main__':

@@ -1,21 +1,24 @@
 import socket
-import threading
-import time
 import config
+import json
+import time
+import requests
+from PyQt5.QtNetwork import QTcpServer, QHostAddress
+from PyQt5.QtWidgets import QApplication, QWidget, QTextBrowser, QVBoxLayout
+import threading
 
 
-def Singleton(cls):
+def singleton(cls):
     _instance = {}
 
     def _singleton(*args, **kargs):
         if cls not in _instance:
             _instance[cls] = cls(*args, **kargs)
         return _instance[cls]
-
     return _singleton
 
 
-@Singleton
+@singleton
 class TcpServer:
     def __init__(self):
         self.bind_ip = config.tcp_server_ip  # 监听所有可用的接口
@@ -69,6 +72,61 @@ class TcpServer:
 
     def close(self):
         self.tcp_server_socket.close()
+
+    def write_data(self,data):
+        self.client.send(data.encode())
+
+
+class TcpServerQt(QWidget):
+    def __init__(self):
+        super(TcpServerQt, self).__init__()
+        self.server = QTcpServer(self)
+        if not self.server.listen(QHostAddress.AnyIPv4, config.tcp_server_port):
+            self.browser.append(self.server.errorString())
+        self.server.newConnection.connect(self.new_socket_slot)
+        self.sock = None
+        self.b_connect = 0
+
+    def new_socket_slot(self):
+        sock = self.server.nextPendingConnection()
+        peer_address = sock.peerAddress().toString()
+        peer_port = sock.peerPort()
+        news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
+        print('news', news)
+        sock.readyRead.connect(lambda: self.read_data_slot(sock))
+        sock.disconnected.connect(lambda: self.disconnected_slot(sock))
+        self.sock = sock
+        self.b_connect = 1
+    # 3
+    def read_data_slot(self, sock):
+        while sock.bytesAvailable():
+            datagram = sock.read(sock.bytesAvailable())
+            message = datagram.decode()
+            print('receive data', message)
+            # answer = self.get_answer(message).replace('{br}', '\n')
+            # new_datagram = answer.encode()
+
+    def write_data(self, new_datagram):
+        if self.sock:
+            self.sock.write(new_datagram.encode())
+
+    def get_answer(self, message):
+        payload = {'key': 'free', 'appid': '0', 'msg': message}
+        r = requests.get("http://api.qingyunke.com/api.php?", params=payload)
+        answer = json.loads(r.text)['content']
+        return answer
+
+    # 4
+    def disconnected_slot(self, sock):
+        peer_address = sock.peerAddress().toString()
+        peer_port = sock.peerPort()
+        news = 'Disconnected with address {}, port {}'.format(peer_address, str(peer_port))
+        sock.close()
+
+    def keyPressEvent(self, keyevent):
+        if keyevent.text() in ['w', 'W']:
+            print(keyevent.text())
+            self.write_data('hello')
 
 
 if __name__ == '__main__':
