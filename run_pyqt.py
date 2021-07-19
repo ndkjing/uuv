@@ -36,6 +36,27 @@ class WorkerThread(QThread):
     def run(self):
         self.run_func()
 
+class Camera:
+    """摄像头对象"""
+
+    def __init__(self, url, out_label):
+        """初始化方法"""
+        self.url = url
+        self.outLabel = out_label
+
+    def display(self):
+        """显示"""
+        cap = cv2.VideoCapture(self.url)
+        start_time = time.time()
+        while cap.isOpened():
+            success, frame = cap.read()
+            if success:
+                if (time.time() - start_time) > 0.1:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    img = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+                    self.outLabel.setPixmap(QPixmap.fromImage(img))
+                    cv2.waitKey(1)
+                    start_time = time.time()
 
 class MainDialog(QMainWindow):
     def __init__(self, parent=None):
@@ -53,16 +74,10 @@ class MainDialog(QMainWindow):
         # 显示视频
         self.open_flag = True
         self.painter = QPainter(self)
-        front_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1657329096&id' \
-                          '=335347591388602368&t=e1dd42835fd9bece1478d0d19d68b727dafbb8630d96a1272d65c3f389dd9bca&ev' \
-                          '=100 '
-        back_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_2?expire=1657506533&id' \
-                         '=336091817970577408&t=d537867dd4f403d5b162f51e73011ee8f30670d6abac8d5dc6807f23ab98f6f6&ev' \
-                         '=100 '
-        # front_video_src = r'F:\软件相关\开发软件\ffmpeg\bin\ffmpeg_test.flv'
-        # back_video_src = r'F:\软件相关\开发软件\ffmpeg\bin\ffmpeg_test.flv'
-        self.front_video_stream = cv2.VideoCapture(front_video_src)
-        self.back_video_stream = cv2.VideoCapture(back_video_src)
+        self.front_video_stream = None
+        self.back_video_stream = None
+        self.front_video_stream = cv2.VideoCapture(config.front_video_src)
+        self.back_video_stream = cv2.VideoCapture(config.back_video_src)
         # 显示三维模型
         # self.currentSTL = None
         # self.lastDir = None
@@ -79,6 +94,7 @@ class MainDialog(QMainWindow):
         # 前摄后后摄图片
         self.frame_front = None
         self.frame_back = None
+
         # 长时间的工作放到这里
         # self.tcp_work = WorkerThread(parent=None, run_func=self.datamanager_obj.tcp_server_obj.wait_connect)
         # self.work.finish.connect(self.showResult)
@@ -271,7 +287,6 @@ class MainDialog(QMainWindow):
         :param front:
         :return:
         """
-        # print(front,save_path,self.frame_front,type(self.frame_front))
         if front:
             cv2.imwrite(save_path, self.frame_front)
         else:
@@ -298,7 +313,6 @@ class MainDialog(QMainWindow):
                                  edgeColor=(1, 1, 1, 1))
         self.viewer.addItem(mesh_obj)
 
-    # def paintEvent(self, a0: QtGui.QPaintEvent):
     def paintEvent(self, event):
         if self.open_flag:
             ret1, frame_front = self.front_video_stream.read()
@@ -318,23 +332,23 @@ class MainDialog(QMainWindow):
             self.update()
 
     def keyPressEvent(self, keyevent):
-        if keyevent.text() in ['w','W']:
+        if keyevent.text() in ['w', 'W']:
             self.datamanager_obj.move = 1
-        elif keyevent.text() in ['a','A']:
+        elif keyevent.text() in ['a', 'A']:
             self.datamanager_obj.move = 3
-        elif keyevent.text() in ['s','S']:
-            self.datamanager_obj.move =2
-        elif keyevent.text() in ['d','D']:
-            self.datamanager_obj.move =4
-        elif keyevent.text() in ['q','Q']:
-            self.datamanager_obj.move =5
-        elif keyevent.text() in ['e','E']:
-            self.datamanager_obj.move =6
-        elif keyevent.text() in ['z','Z']:
+        elif keyevent.text() in ['s', 'S']:
+            self.datamanager_obj.move = 2
+        elif keyevent.text() in ['d', 'D']:
+            self.datamanager_obj.move = 4
+        elif keyevent.text() in ['q', 'Q']:
+            self.datamanager_obj.move = 5
+        elif keyevent.text() in ['e', 'E']:
+            self.datamanager_obj.move = 6
+        elif keyevent.text() in ['z', 'Z']:
             self.datamanager_obj.move = 7
-        elif keyevent.text() in ['c','C']:
-            self.datamanager_obj.move =8
-        elif keyevent.text() in ['x','X']:
+        elif keyevent.text() in ['c', 'C']:
+            self.datamanager_obj.move = 8
+        elif keyevent.text() in ['x', 'X']:
             self.datamanager_obj.move = 0
 
 
@@ -344,6 +358,5 @@ if __name__ == '__main__':
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
-
     main_windows.show()
     sys.exit(myapp.exec_())

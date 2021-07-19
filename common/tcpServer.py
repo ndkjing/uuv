@@ -80,6 +80,8 @@ class TcpServer:
 class TcpServerQt(QWidget):
     def __init__(self):
         super(TcpServerQt, self).__init__()
+        self.bind_ip = config.tcp_server_ip  # 监听所有可用的接口
+        self.bind_port = config.tcp_server_port  # 非特权端口号都可以使用
         self.server = QTcpServer(self)
         if not self.server.listen(QHostAddress.AnyIPv4, config.tcp_server_port):
             self.browser.append(self.server.errorString())
@@ -97,7 +99,7 @@ class TcpServerQt(QWidget):
         sock.disconnected.connect(lambda: self.disconnected_slot(sock))
         self.sock = sock
         self.b_connect = 1
-    # 3
+
     def read_data_slot(self, sock):
         while sock.bytesAvailable():
             datagram = sock.read(sock.bytesAvailable())

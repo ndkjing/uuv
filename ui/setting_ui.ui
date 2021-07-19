@@ -62,6 +62,10 @@
            <property name="text">
             <string>开启服务端</string>
            </property>
+           <property name="icon">
+            <iconset>
+             <normaloff>:/icon/statics/resource/icon/arrow-000.png</normaloff>:/icon/statics/resource/icon/arrow-000.png</iconset>
+           </property>
           </widget>
          </item>
          <item>
@@ -128,6 +132,10 @@
           <widget class="QPushButton" name="pushButton_6">
            <property name="text">
             <string>PushButton</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../resource.qrc">
+             <normaloff>:/icon/penguin.png</normaloff>:/icon/penguin.png</iconset>
            </property>
           </widget>
          </item>
@@ -401,6 +409,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resource.qrc"/>
+ </resources>
  <connections/>
 </ui>
