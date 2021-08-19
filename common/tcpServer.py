@@ -118,7 +118,6 @@ class TcpServerQt(QWidget):
         answer = json.loads(r.text)['content']
         return answer
 
-    # 4
     def disconnected_slot(self, sock):
         peer_address = sock.peerAddress().toString()
         peer_port = sock.peerPort()

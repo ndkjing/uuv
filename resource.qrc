@@ -1,0 +1,7 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+  <qresource prefix="icon">
+    <file alias="penguin.png">statics/resource/icon/arrow-000.png</file>
+    <file alias="penguin.png">statics/resource/icon/arrow-180.png</file>
+  </qresource>
+</RCC>

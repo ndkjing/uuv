@@ -41,9 +41,15 @@ class Jostick:
 
     def get_count(self):
         self.count = pygame.joystick.get_count()
+        # print('self.count',self.count)
 
-    def get_data(self):
-        # 寻找电脑上的手柄数量，一般我只连了一个手柄（因为只有一个）
+    def get_data(self, is_debug=False):
+        """
+        获取数据
+        :param is_debug:False不打印数据 True print获取到的数据
+        :return:
+        """
+        # 寻找电脑上的手柄数量
         for i in range(self.count):
             # 读取对应设备
             joystick = pygame.joystick.Joystick(i)
@@ -63,16 +69,14 @@ class Jostick:
                         axis = round(joystick.get_axis(i), 2)
                         if i == 0:
                             self.axes_0 = axis
-                            # print("0 ", axis)
                         if i == 1:
                             self.axes_1 = axis
-                            # print("1 ", axis)
                         if i == 2:  # 上是负数
                             self.axes_2 = axis
-                            # print("2 ", axis)
                         if i == 3:  # 左是负数
                             self.axes_3 = axis
-                            # print("3 ", axis)
+                        if is_debug:
+                            print("0 1 2 3 ", self.axes_0, self.axes_1, self.axes_2, self.axes_3)
                     buttons = joystick.get_numbuttons()
                     button_input = [joystick.get_button(i) for i in range(buttons)]
                     if button_input[0] == 1:
@@ -134,6 +138,8 @@ class Jostick:
 
 if __name__ == '__main__':
     obj = Jostick()
-    t1 = threading.Thread(obj.get_data())
-    t1.run()
-    t1.join()
+    obj.get_data(is_debug=True)
+    # t1 = threading.Thread(obj.get_data())
+    # t1.run()
+    # while True:
+    #     time.sleep(1)
