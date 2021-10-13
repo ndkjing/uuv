@@ -212,4 +212,4 @@ class Ui_Form(object):
         self.v_p_label.setText(_translate("Form", "v_p"))
         self.v_i_label.setText(_translate("Form", "v_i"))
         self.v_d_label.setText(_translate("Form", "v_d"))
-import resource_rc
+import res_rc

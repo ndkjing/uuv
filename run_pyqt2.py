@@ -8,11 +8,13 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import cv2
+from qt_material import apply_stylesheet
 # from vtk import *
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import numpy as np
 from stl import mesh
 import pyqtgraph.opengl as gl
+import math
 
 from dataManager import data_manager
 import config
@@ -73,8 +75,24 @@ class MainDialog(QMainWindow):
         # self.viewer = gl.GLViewWidget()
         # self.ui.view_layout.addWidget(self.viewer, 1)
         # self.show_view()
-        self.label1 = angle.Clock_paint()
-        self.ui.verticalLayout_2.addWidget(self.label1)
+        # 绘制角度
+        # self.horizon_layout1 = QHBoxLayout()
+        # self.horizon_layout2 = QHBoxLayout()
+        # self.label_5 = angle.Clock_paint()
+        # self.ui.horizontalLayout_3.addWidget(self.label_5)
+        # self.label2 = QPushButton('Button', self)
+        # self.label2.setToolTip('QPushButton')
+        #
+        # self.ui.x_y_latout.addWidget(self.label1)
+        # self.ui.z_layout.addWidget(self.label1)
+        # self.ui.x_y_z_layout.addWidget(self.label1)
+
+        # self.ui.x_y_z_box.setLayout(self.horizon_layout1)
+        # self.ui.groupBox_11.setLayout(self.horizon_layout2)
+        # self.timer.timeout.connect(self.label1.update)
+        # self.ui.label_5 = angle.Clock_paint()
+        # self.ui.x_y_layout.addWidget(self.label1)
+        # self.ui.x_y_z_box.addWidget(self.label2)
         # 设置页面
         self.setting_dlg = SettingWindow()
         # 绑定修改数据
@@ -97,6 +115,15 @@ class MainDialog(QMainWindow):
         self.joystick_work.start()
         # 更新pid参数
         self.update_pid(value=None)
+        # self.init_image()
+
+    # 初始化背景图片
+    def init_image(self):
+        self.ui.init_motor_btn.setStyleSheet('QPushButton{color:#FFFFFF,border-image:url(./statics/images/装饰.png)}')
+        self.ui.back_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
+        self.ui.back_camera_cap.setStyleSheet('QLabel{color:#FFFFFF}')
+        self.ui.front_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
+        self.ui.front_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
 
     # 绑定信号和槽
     def connect_single_slot(self):
@@ -202,7 +229,9 @@ class MainDialog(QMainWindow):
         print('close_joystick')
 
     def display_video(self, url, label):
-        """显示"""
+        """显示视频 暂时不显示"""
+        pass
+        """
         cap = cv2.VideoCapture(url)
         start_time = time.time()
         print(cap, cap.isOpened())
@@ -222,6 +251,8 @@ class MainDialog(QMainWindow):
                     label.setPixmap(QPixmap.fromImage(img))
                     cv2.waitKey(1)
                     start_time = time.time()
+        """
+
 
     # 发送数据
     def send_data(self):
@@ -234,10 +265,34 @@ class MainDialog(QMainWindow):
             self.ui.joystick_label.setText("遥控")
         else:
             self.ui.joystick_label.setText("无遥控")
-        self.ui.deep_label.setText("深度:13.5m")
-        self.ui.pressure_label.setText("压力:1.6")
-        self.ui.temperature_label.setText("水温:29.8")
-        self.ui.leak_label.setText("未漏水")
+        deep_str = "深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
+        press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
+        temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
+        leak_str = "未漏水 %d" % self.datamanager_obj.tcp_server_obj.is_leak_water
+        speed_str = "速度 %% %d" % self.datamanager_obj.tcp_server_obj.speed
+        light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
+        sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
+        camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
+        arm_str = "机械臂： %d" % self.datamanager_obj.tcp_server_obj.arm_pwm
+        x_angle_str = "x角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[0]
+        y_angle_str = "y角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[1]
+        z_angle_str = "z角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[2]
+        self.ui.pressure_label.setText(press_str)
+        self.ui.temperature_label.setText(temperature_str)
+        self.ui.leak_label.setText(leak_str)
+        self.ui.deep_label.setText(deep_str)
+        self.ui.speed_label.setText(speed_str)
+        self.ui.light_label.setText(light_str)
+        self.ui.sonar_label.setText(sonar_str)
+        self.ui.camera_steer_label.setText(camera_steer_str)
+        self.ui.arm_label.setText(arm_str)
+        self.ui.angle_x_label.setText(x_angle_str)
+        self.ui.angle_y_label.setText(y_angle_str)
+        self.ui.angle_z_label.setText(z_angle_str)
+        control_info_dict = {0: ' 停止', 1: ' 前进', 2: ' 后退', 3: ' 左转', 4: ' 右转', 5: ' 上升', 6: ' 下降', 7: ' 左移',
+                                  8: ' 右移'}
+        mode_str = control_info_dict[self.datamanager_obj.move]
+        self.ui.mode_label.setText(mode_str)
 
     # 获取保存数据路径
     def get_path(self, b_save_img=True, b_front=True):
@@ -352,6 +407,95 @@ class MainDialog(QMainWindow):
     #         self.ui.front_video_label.setPixmap(QPixmap.fromImage(self.Qframe_front))
     #         self.ui.back_video_label.setPixmap(QPixmap.fromImage(self.Qframe_back))
     #         self.update()
+    # def textRectF(self,radius,pointsize,angle):
+    #     recf = QRectF()
+    #     recf.setX(radius*math.cos(angle*math.pi/180.0)-pointsize*2)
+    #     recf.setY(radius*math.sin(angle*math.pi/180.0)-pointsize/2.0)
+    #     recf.setWidth(pointsize*4)#宽度、高度
+    #     recf.setHeight(pointsize)
+    #     return recf
+    #
+    # def paintEvent(self, event):
+    #     print('update paint')
+    #     hour_points = [QPoint(5,8),QPoint(-5,8),QPoint(0,-30)]
+    #     minute_points = [QPoint(5,8),QPoint(-5,8),QPoint(0,-65)]
+    #     second_points = [QPoint(5,8),QPoint(-5,8),QPoint(0,-80)]
+    #     hour_color = QColor(200,100,0,200)
+    #     minute_color = QColor(0,127,127,150)
+    #     second_color = QColor(0,160,230,150)
+    #
+    #     min_len = min(self.width(),self.height())
+    #     time = QTime.currentTime() #获取当前时间
+    #     painter = QPainter(self)
+    #     painter.setRenderHint(QPainter.Antialiasing)
+    #     painter.translate(self.width()/2,self.height()/2)#平移到窗口中心
+    #     painter.scale(min_len/200.0,min_len/200.0) #进行尺度缩放
+    #
+    #     #----------绘制时针------------
+    #     painter.setPen(Qt.NoPen)
+    #     painter.setBrush(hour_color)#颜色
+    #     painter.save()
+    #     # 根据 1小时时= 30°，水品方向逆时针旋转时针
+    #     # painter.rotate(30.0*((time.hour()+time.minute()/60.0)))
+    #     # 根据 偏航旋转角度
+    #     painter.rotate(self.y)
+    #     painter.drawConvexPolygon(QPolygon(hour_points))
+    #     painter.restore() # save 退出，可重新设置画笔
+    #
+    #     painter.setPen(hour_color)
+    #     #绘制小时线(360/12 = 30度)
+    #     for i in range(12):
+    #         painter.drawLine(88,0,96,0)#绘制水平线
+    #         painter.rotate(30.0)# 原有旋转角度上进行旋转；
+    #
+    #     radius = 100 # 半径
+    #     font = painter.font()
+    #     font.setBold(True)
+    #     painter.setFont(font)
+    #     pointSize = font.pointSize()#字体大小
+    #     # print(pointSize)
+    #
+    #     #绘制小时文本
+    #     for i in range(12):
+    #         nhour = i + 3 # 从水平 3 点进行绘制
+    #         if(nhour>12):
+    #             nhour -= 12
+    #         painter.drawText(self.textRectF(radius*0.8,pointSize,i*30),Qt.AlignCenter,str(nhour*30))
+    #
+    #     #绘制分针;
+    #     painter.setPen(Qt.NoPen)
+    #     painter.setBrush(minute_color)
+    #     painter.save()
+    #
+    #     # 1分钟为6°，
+    #     # painter.rotate(6.0*(time.minute()+time.second()/60.0))
+    #     painter.rotate(self.p)
+    #     painter.drawConvexPolygon(QPolygon(minute_points))
+    #     painter.restore()
+    #
+    #     #绘制分针线
+    #     painter.setPen(minute_color)
+    #     for i in range(60):
+    #         if(i%5 !=0):
+    #             painter.drawLine(92,0,96,0)
+    #         painter.rotate(6.0)
+    #
+    #     #绘制秒针
+    #     painter.setPen(Qt.NoPen)
+    #     painter.setBrush(second_color)
+    #     painter.save()
+    #     #绘制秒线
+    #     # painter.rotate(6.0*time.second())
+    #     painter.rotate(self.r)
+    #     painter.drawConvexPolygon(QPolygon(second_points))
+    #     painter.restore()
+    #
+    #     painter.setPen(second_color)
+    #     for i in range(360):
+    #         if(i%5!=0 or i%30!=0):#绘制
+    #             painter.drawLine(94,0,96,0)
+    #         painter.rotate(1.0)#旋转
+
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
@@ -362,13 +506,13 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.move = 2
         elif keyevent.text() in ['d', 'D']:
             self.datamanager_obj.move = 4
-        elif keyevent.text() in ['q', 'Q']:
-            self.datamanager_obj.move = 5
-        elif keyevent.text() in ['e', 'E']:
-            self.datamanager_obj.move = 6
         elif keyevent.text() in ['z', 'Z']:
-            self.datamanager_obj.move = 7
+            self.datamanager_obj.move = 5
         elif keyevent.text() in ['c', 'C']:
+            self.datamanager_obj.move = 6
+        elif keyevent.text() in ['q', 'Q']:
+            self.datamanager_obj.move = 7
+        elif keyevent.text() in ['e', 'E']:
             self.datamanager_obj.move = 8
         elif keyevent.text() in ['x', 'X']:
             self.datamanager_obj.move = 0
@@ -377,8 +521,11 @@ class MainDialog(QMainWindow):
 if __name__ == '__main__':
     myapp = QApplication(sys.argv)
     main_windows = MainDialog()
+    main_windows.resize(1920,1080)
+    # main_windows.setStyleSheet("#MainWindow{border-image:url(./statics/images/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
+    apply_stylesheet(myapp, theme='dark_teal.xml')
     main_windows.show()
     sys.exit(myapp.exec_())

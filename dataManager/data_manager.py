@@ -22,7 +22,7 @@ def Singleton(cls):
 @Singleton
 class DataManager(object):
     def __init__(self, only_joystick=False):
-        if config.tcp_server_type==1:
+        if config.tcp_server_type == 1:
             self.tcp_server_obj = tcpServer.TcpServerQt()
         else:
             self.tcp_server_obj = tcpServer.TcpServer()
@@ -37,11 +37,6 @@ class DataManager(object):
         self.pid_v = [0, 0, 0]
         self.backup_pwm = [0, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         self.receive_pwm = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
-        self.compass = [0, 0, 0]
-        self.deep = None  # 深度
-        self.pressure = None  # 仓压
-        self.temperature = None  # 水温度
-        self.b_leak = None  # 是否漏水
         self.is_start = 0  # 是否已开启
         self.only_joystick = only_joystick
 

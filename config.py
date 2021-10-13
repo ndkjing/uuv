@@ -25,8 +25,18 @@ if not os.path.exists(save_imgs_dir):
     os.mkdir(save_imgs_dir)
 if not os.path.exists(save_videos_dir):
     os.mkdir(save_videos_dir)
-tcp_server_ip = utils.get_host_ip()
-tcp_server_port = 9002
+# tcp 服务器地址和端口
+target_server_type = 0  # 0 1002 wifi地址  1 1002网线地址   2 控制箱地址
+if target_server_type == 0:
+    server_ip = '192.168.199.222'
+elif target_server_type == 1:
+    server_ip = '192.168.9.19'
+else:
+    server_ip = '192.168.2.2'
+server_port = 5566
+# tcp_server_ip = utils.get_host_ip() # 自动获取ip
+tcp_server_ip = server_ip
+tcp_server_port = 5566
 #1 qt tcp 2 tcp
 tcp_server_type = 1
 front_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1657329096&id' \

@@ -1,0 +1,33 @@
+<RCC>
+  <qresource prefix="images">
+    <file>背景.png</file>
+    <file>边框装饰.png</file>
+    <file>编辑.png</file>
+    <file>返回.png</file>
+    <file>机器人.png</file>
+    <file>矩形 2.png</file>
+    <file>矩形 14.png</file>
+    <file>矩形 27 拷贝 4.png</file>
+    <file>矩形 744.png</file>
+    <file>菱形.png</file>
+    <file>内圈.png</file>
+    <file>切换.png</file>
+    <file>切图.png</file>
+    <file>设置.png</file>
+    <file>声呐.png</file>
+    <file>视频边装饰.png</file>
+    <file>视频框.png</file>
+    <file>视频内部装饰.png</file>
+    <file>视频右上角角标.png</file>
+    <file>头部.png</file>
+    <file>头部1.png</file>
+    <file>外圈.png</file>
+    <file>线条 2.png</file>
+    <file>线条.png</file>
+    <file>线条3.png</file>
+    <file>小视频的方框.png</file>
+    <file>小视频上装饰1.png</file>
+    <file>小视频装饰.png</file>
+    <file>装饰.png</file>
+  </qresource>
+</RCC>

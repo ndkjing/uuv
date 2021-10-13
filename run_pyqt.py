@@ -72,7 +72,7 @@ class MainDialog(QMainWindow):
         self.timer1.timeout.connect(self.update)
         self.timer1.start(1000)  # 每1s 更新一次
         # 显示视频
-        self.open_flag = True
+        self.open_flag = False
         self.painter = QPainter(self)
         self.front_video_stream = None
         self.back_video_stream = None
@@ -225,10 +225,7 @@ class MainDialog(QMainWindow):
             self.ui.joystick_label.setText("遥控")
         else:
             self.ui.joystick_label.setText("无遥控")
-        self.ui.deep_label.setText("深度:13.5m")
-        self.ui.pressure_label.setText("压力:1.6")
-        self.ui.temperature_label.setText("水温:29.8")
-        self.ui.leak_label.setText("未漏水")
+
 
     # 获取保存数据路径
     def get_path(self, b_save_img=True, b_front=True):

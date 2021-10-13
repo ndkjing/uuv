@@ -1,11 +1,13 @@
 import socket
-import config
 import json
+import re
 import time
 import requests
 from PyQt5.QtNetwork import QTcpServer, QHostAddress
 from PyQt5.QtWidgets import QApplication, QWidget, QTextBrowser, QVBoxLayout
 import threading
+
+import config
 
 
 def singleton(cls):
@@ -15,6 +17,7 @@ def singleton(cls):
         if cls not in _instance:
             _instance[cls] = cls(*args, **kargs)
         return _instance[cls]
+
     return _singleton
 
 
@@ -34,6 +37,28 @@ class TcpServer:
         # 是否有链接上
         self.b_connect = 0
         self.client = None
+        # 罗盘角度
+        self.theta_z = 0  # z轴角度
+        self.theta_list = []  # 依次放 x,y,z 角度
+        self.last_theta = 0
+        # 深度
+        self.deep = 0
+        # 温度
+        self.temperature = 0
+        # 仓压
+        self.press = 0
+        # 是否漏水
+        self.is_leak_water = 0
+        # 灯
+        self.is_big_light = 0
+        # 声呐
+        self.is_sonar = 0
+        # 摄像头角度
+        self.camera_angle_pwm = 1500
+        # 机械臂
+        self.arm_pwm = 1500
+        # 动力占比 %
+        self.speed = 40
 
     def wait_connect(self):
         # 等待客户连接，连接成功后，将socket对象保存到client，将细节数据等保存到addr
@@ -73,7 +98,7 @@ class TcpServer:
     def close(self):
         self.tcp_server_socket.close()
 
-    def write_data(self,data):
+    def write_data(self, data):
         self.client.send(data.encode())
 
 
@@ -88,13 +113,34 @@ class TcpServerQt(QWidget):
         self.server.newConnection.connect(self.new_socket_slot)
         self.sock = None
         self.b_connect = 0
+        # 罗盘角度
+        self.theta_z = 0  # z轴角度
+        self.theta_list = [0, 0, 0]  # 依次放 x,y,z 角度
+        self.last_theta = 0
+        # 深度
+        self.deep = 0
+        # 温度
+        self.temperature = 0
+        # 仓压
+        self.press = 0
+        # 是否漏水
+        self.is_leak_water = 0
+        # 灯
+        self.is_big_light = 0
+        # 声呐
+        self.is_sonar = 0
+        # 摄像头角度
+        self.camera_angle_pwm = 1500
+        # 机械臂
+        self.arm_pwm = 1500
+        # 动力占比 %
+        self.speed = 40
 
     def new_socket_slot(self):
         sock = self.server.nextPendingConnection()
         peer_address = sock.peerAddress().toString()
         peer_port = sock.peerPort()
         news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
-        print('news', news)
         sock.readyRead.connect(lambda: self.read_data_slot(sock))
         sock.disconnected.connect(lambda: self.disconnected_slot(sock))
         self.sock = sock
@@ -104,7 +150,60 @@ class TcpServerQt(QWidget):
         while sock.bytesAvailable():
             datagram = sock.read(sock.bytesAvailable())
             message = datagram.decode()
-            print('receive data', message)
+            print('socket receive data', message)
+            message = str(message)
+            message = message.strip()
+
+            press_find = re.findall(r'\"pressure\":(.*?),\"', message)
+            if len(press_find) > 0:
+                self.press = float(press_find[0])
+
+            water_find = re.findall(r'\"water\":(.*?),\"', message)
+            if len(water_find) > 0:
+                self.is_leak_water = int(water_find[0])
+
+            light_find = re.findall(r'\"light\":(.*?),\"', message)
+            if len(light_find) > 0:
+                self.is_big_light = int(light_find[0])
+
+            sonar_find = re.findall(r'\"sonar\":(.*?),\"', message)
+            if len(sonar_find) > 0:
+                self.is_sonar = int(sonar_find[0])
+
+            camera_find = re.findall(r'\"camera\":(.*?),\"', message)
+            if len(camera_find) > 0:
+                self.camera_angle_pwm = int(camera_find[0])
+
+            arm_find = re.findall(r'\"arm\":(.*?),\"', message)
+            if len(arm_find) > 0:
+                self.arm_pwm = int(arm_find[0])
+
+            pitch_find = re.findall(r'\"pitch\":(.*?),\"', message)
+            if len(pitch_find) > 0:
+                self.theta_list[0] = float(pitch_find[0])
+
+            roll_find = re.findall(r'\"roll\":(.*?),\"', message)
+            if len(roll_find) > 0:
+                self.theta_list[1] = float(roll_find[0])
+
+            yaw_find = re.findall(r'\"yaw\":(.*?),\"', message)
+            if len(yaw_find) > 0:
+                self.theta_list[2] = float(yaw_find[0])
+                self.theta_z = self.theta_list[2]
+
+            depth_find = re.findall(r'\"depth\":(.*?),\"', message)
+            if len(depth_find) > 0:
+                self.deep = float(depth_find[0])
+
+            tem_find = re.findall(r'\"tem\":(.*?),\"', message)
+            if len(tem_find) > 0:
+                self.temperature = float(tem_find[0])
+
+            speed_find = re.findall(r'\"speed\":(.*)}', message)
+            if len(speed_find) > 0:
+                self.speed = int(speed_find[0])
+            print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_big_light,
+                  self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed)
             # answer = self.get_answer(message).replace('{br}', '\n')
             # new_datagram = answer.encode()
 
