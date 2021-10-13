@@ -77,6 +77,26 @@
         </widget>
        </item>
        <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="logo_label">
+         <property name="text">
+          <string>行星轮</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_4">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -369,6 +389,13 @@
                   </property>
                  </widget>
                 </item>
+                <item>
+                 <widget class="QGroupBox" name="test_paint_box">
+                  <property name="title">
+                   <string>GroupBox</string>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </widget>
              </item>
@@ -399,6 +426,21 @@
                    <string/>
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayout_5">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
                    <item>
                     <widget class="QLabel" name="label">
                      <property name="text">
@@ -418,27 +460,51 @@
                    <string/>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_7">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
                    <property name="leftMargin">
                     <number>0</number>
                    </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
                    <item>
-                    <widget class="QRadioButton" name="radioButton">
+                    <widget class="QRadioButton" name="speed_radio_button">
                      <property name="text">
-                      <string>RadioButton</string>
+                      <string>使能</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSlider" name="horizontalSlider">
+                    <widget class="QSlider" name="speed_slider">
+                     <property name="toolTipDuration">
+                      <number>1</number>
+                     </property>
+                     <property name="singleStep">
+                      <number>1</number>
+                     </property>
+                     <property name="value">
+                      <number>30</number>
+                     </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="label_4">
+                    <widget class="QLabel" name="speed_slider_label">
                      <property name="text">
-                      <string>TextLabel</string>
+                      <string>油门：</string>
                      </property>
                     </widget>
                    </item>
@@ -451,24 +517,39 @@
                    <string/>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_8">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_2">
+                    <widget class="QRadioButton" name="deep_radio_button">
                      <property name="text">
-                      <string>RadioButton</string>
+                      <string>使能</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSlider" name="horizontalSlider_2">
+                    <widget class="QSlider" name="deep_slider">
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="label_2">
+                    <widget class="QLabel" name="deep_slider_label">
                      <property name="text">
-                      <string>TextLabel</string>
+                      <string>深度：</string>
                      </property>
                     </widget>
                    </item>
@@ -481,24 +562,42 @@
                    <string/>
                   </property>
                   <layout class="QHBoxLayout" name="horizontalLayout_9">
+                   <property name="spacing">
+                    <number>0</number>
+                   </property>
+                   <property name="leftMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="rightMargin">
+                    <number>0</number>
+                   </property>
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
                    <item>
-                    <widget class="QRadioButton" name="radioButton_3">
+                    <widget class="QRadioButton" name="angle_radio_button">
                      <property name="text">
-                      <string>RadioButton</string>
+                      <string>使能</string>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSlider" name="horizontalSlider_3">
+                    <widget class="QSlider" name="angle_slider">
+                     <property name="maximum">
+                      <number>360</number>
+                     </property>
                      <property name="orientation">
                       <enum>Qt::Horizontal</enum>
                      </property>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QLabel" name="label_3">
+                    <widget class="QLabel" name="angle_slider_label">
                      <property name="text">
-                      <string>TextLabel</string>
+                      <string>角度：</string>
                      </property>
                     </widget>
                    </item>

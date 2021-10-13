@@ -12,14 +12,42 @@ from qt_material import apply_stylesheet
 # from vtk import *
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import numpy as np
-from stl import mesh
-import pyqtgraph.opengl as gl
+# from stl import mesh
+# import pyqtgraph.opengl as gl
 import math
 
 from dataManager import data_manager
 import config
 from storage import save_data
 
+
+class DrawMultiLine(QWidget):
+    def __init__(self):
+        super(DrawMultiLine, self).__init__()
+        print('init')
+
+    def paintEvent(self, event):
+        print('update paint')
+        painter = QPainter()
+        painter.begin(self)
+        # 颜色， 粗细， 线条类型（默认为Qt.SolidLine，即实线）
+        pen = QPen(Qt.red, 3, Qt.SolidLine)
+        painter.setPen(pen)
+        painter.drawLine(20, 40, 250, 40)
+        # 点线
+        pen.setStyle(Qt.DashDotLine)
+        painter.setPen(pen)
+        painter.drawLine(20 ,80, 250, 80)
+        # 点点线
+        pen.setStyle(Qt.DashDotDotLine)
+        painter.setPen(pen)
+        painter.drawLine(20, 120, 250 ,120)
+        # 自定义点线风格
+        pen.setStyle(Qt.CustomDashLine)
+        pen.setDashPattern([1, 10, 5, 8])
+        painter.setPen(pen)
+        painter.drawLine(20, 200, 250, 200)
+        painter.end()
 
 class SettingWindow(QDialog):
     def __init__(self):
@@ -75,24 +103,7 @@ class MainDialog(QMainWindow):
         # self.viewer = gl.GLViewWidget()
         # self.ui.view_layout.addWidget(self.viewer, 1)
         # self.show_view()
-        # 绘制角度
-        # self.horizon_layout1 = QHBoxLayout()
-        # self.horizon_layout2 = QHBoxLayout()
-        # self.label_5 = angle.Clock_paint()
-        # self.ui.horizontalLayout_3.addWidget(self.label_5)
-        # self.label2 = QPushButton('Button', self)
-        # self.label2.setToolTip('QPushButton')
-        #
-        # self.ui.x_y_latout.addWidget(self.label1)
-        # self.ui.z_layout.addWidget(self.label1)
-        # self.ui.x_y_z_layout.addWidget(self.label1)
 
-        # self.ui.x_y_z_box.setLayout(self.horizon_layout1)
-        # self.ui.groupBox_11.setLayout(self.horizon_layout2)
-        # self.timer.timeout.connect(self.label1.update)
-        # self.ui.label_5 = angle.Clock_paint()
-        # self.ui.x_y_layout.addWidget(self.label1)
-        # self.ui.x_y_z_box.addWidget(self.label2)
         # 设置页面
         self.setting_dlg = SettingWindow()
         # 绑定修改数据
@@ -116,6 +127,39 @@ class MainDialog(QMainWindow):
         # 更新pid参数
         self.update_pid(value=None)
         # self.init_image()
+        self.init_base_ui()
+        self.paint_angle()
+        self.horizon_layout = None
+        self.test_obj = None
+
+    def paint_angle(self):
+        # 绘制角度
+        self.horizon_layout = QHBoxLayout()
+        self.test_obj = DrawMultiLine()
+        self.horizon_layout.addChildWidget(self.test_obj)
+        self.ui.test_paint_box.setLayout(self.horizon_layout)
+        # self.horizon_layout2 = QHBoxLayout()
+        # self.label_5 = angle.Clock_paint()
+        # self.ui.horizontalLayout_3.addWidget(self.label_5)
+        # self.label2 = QPushButton('Button', self)
+        # self.label2.setToolTip('QPushButton')
+        # self.ui.x_y_latout.addWidget(self.label1)
+        # self.ui.z_layout.addWidget(self.label1)
+        # self.ui.x_y_z_layout.addWidget(self.label1)
+
+        # self.ui.x_y_z_box.setLayout(self.horizon_layout1)
+        # self.ui.groupBox_11.setLayout(self.horizon_layout2)
+        # self.timer.timeout.connect(self.label1.update)
+        # self.ui.label_5 = angle.Clock_paint()
+        # self.ui.x_y_layout.addWidget(self.label1)
+        # self.ui.x_y_z_box.addWidget(self.label2)
+
+    def init_base_ui(self):
+        # 滑动条最大值在左边，所以这样设置
+        self.ui.speed_slider.setValue(self.ui.speed_slider.maximum() - 30)
+        self.ui.deep_slider.setValue(self.ui.deep_slider.maximum())
+        self.ui.angle_slider.setValue(self.ui.angle_slider.maximum())
+        self.ui.logo_label.setFont(QFont('Arial', 16))
 
     # 初始化背景图片
     def init_image(self):
@@ -152,6 +196,27 @@ class MainDialog(QMainWindow):
         self.ui.back_camera_video.clicked.connect(self.back_video_info)
         # 使能电机
         self.ui.init_motor_btn.clicked.connect(self.init_motor)
+        # 滑动条拖动
+        self.ui.speed_slider.valueChanged.connect(self.update_slider)
+        self.ui.deep_slider.valueChanged.connect(self.update_slider)
+        self.ui.angle_slider.valueChanged.connect(self.update_slider)
+        self.ui.speed_radio_button.clicked.connect(self.update_slider)
+        self.ui.angle_radio_button.clicked.connect(self.update_slider)
+        self.ui.deep_radio_button.clicked.connect(self.update_slider)
+
+    def update_slider(self):
+        speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value()
+        deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
+        angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
+        self.ui.speed_slider_label.setText("油门: %s" % speed_slider_value)
+        self.ui.deep_slider_label.setText("深度: %s" % deep_slider_value)
+        self.ui.angle_slider_label.setText("角度: %s" % angle_slider_value)
+        if self.ui.speed_radio_button.isChecked():
+            self.datamanager_obj.speed_slider_value = speed_slider_value
+        if self.ui.deep_radio_button.isChecked():
+            self.datamanager_obj.deep_slider_value = deep_slider_value
+        if self.ui.angle_radio_button.isChecked():
+            self.datamanager_obj.angle_slider_value = angle_slider_value
 
     # 跟新pid参数
     def update_pid(self, value):
@@ -253,7 +318,6 @@ class MainDialog(QMainWindow):
                     start_time = time.time()
         """
 
-
     # 发送数据
     def send_data(self):
         if self.datamanager_obj.tcp_server_obj.b_connect:
@@ -286,11 +350,13 @@ class MainDialog(QMainWindow):
         self.ui.sonar_label.setText(sonar_str)
         self.ui.camera_steer_label.setText(camera_steer_str)
         self.ui.arm_label.setText(arm_str)
-        self.ui.angle_x_label.setText(x_angle_str)
-        self.ui.angle_y_label.setText(y_angle_str)
-        self.ui.angle_z_label.setText(z_angle_str)
+        # 直接字符显示角度
+        # self.ui.angle_x_label.setText(x_angle_str)
+        # self.ui.angle_y_label.setText(y_angle_str)
+        # self.ui.angle_z_label.setText(z_angle_str)
+
         control_info_dict = {0: ' 停止', 1: ' 前进', 2: ' 后退', 3: ' 左转', 4: ' 右转', 5: ' 上升', 6: ' 下降', 7: ' 左移',
-                                  8: ' 右移'}
+                             8: ' 右移'}
         mode_str = control_info_dict[self.datamanager_obj.move]
         self.ui.mode_label.setText(mode_str)
 
@@ -381,14 +447,14 @@ class MainDialog(QMainWindow):
         # TODO 保存视频
         pass
 
-    def show_view(self):
-        m = mesh.Mesh.from_file('statics/holecube.stl')
-        points = m.points.reshape(-1, 3)
-        faces = np.arange(points.shape[0]).reshape(-1, 3)
-        meshdata = gl.MeshData(vertexes=points, faces=faces, faceColors=[0.5, 0.5, 0.5, 0.5])
-        mesh_obj = gl.GLMeshItem(meshdata=meshdata, smooth=True, drawFaces=True, drawEdges=True,
-                                 edgeColor=(1, 1, 1, 1))
-        self.viewer.addItem(mesh_obj)
+    # def show_view(self):
+    #     m = mesh.Mesh.from_file('statics/holecube.stl')
+    #     points = m.points.reshape(-1, 3)
+    #     faces = np.arange(points.shape[0]).reshape(-1, 3)
+    #     meshdata = gl.MeshData(vertexes=points, faces=faces, faceColors=[0.5, 0.5, 0.5, 0.5])
+    #     mesh_obj = gl.GLMeshItem(meshdata=meshdata, smooth=True, drawFaces=True, drawEdges=True,
+    #                              edgeColor=(1, 1, 1, 1))
+    #     self.viewer.addItem(mesh_obj)
 
     # def paintEvent(self, event):
     #     if self.open_flag:
@@ -496,7 +562,6 @@ class MainDialog(QMainWindow):
     #             painter.drawLine(94,0,96,0)
     #         painter.rotate(1.0)#旋转
 
-
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
             self.datamanager_obj.move = 1
@@ -516,12 +581,18 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.move = 8
         elif keyevent.text() in ['x', 'X']:
             self.datamanager_obj.move = 0
+        elif keyevent.text() in ['r', 'R']:
+            if self.datamanager_obj.is_auto:
+                self.datamanager_obj.is_auto = 0
+            else:
+                self.datamanager_obj.is_auto = 1
+
 
 
 if __name__ == '__main__':
     myapp = QApplication(sys.argv)
     main_windows = MainDialog()
-    main_windows.resize(1920,1080)
+    main_windows.resize(1920, 1080)
     # main_windows.setStyleSheet("#MainWindow{border-image:url(./statics/images/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
