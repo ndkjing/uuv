@@ -31,7 +31,6 @@ class SettingWindow(QDialog):
 
 class JpystickThread(QThread):
     finish = pyqtSignal(int)
-
     def __init__(self, parent=None, run_func=None):
         super().__init__(parent)
         self.run_func = run_func
@@ -44,7 +43,6 @@ class CameraThread(QThread):
     """
     摄像头对象
     """
-
     def __init__(self, url, out_label, parent=None, run_func=None):
         """初始化方法"""
         super().__init__(parent)
@@ -71,6 +69,10 @@ class MainDialog(QMainWindow):
         self.timer1.timeout.connect(self.update)
         self.timer1.timeout.connect(self.paint_angle)  # 更新角度
         self.timer1.start(1000)  # 每1s 更新一次
+
+        # 写入视频
+        self.is_write_frame_front = False
+        self.is_write_frame_back = False
         # 显示三维模型
         # self.currentSTL = None
         # self.lastDir = None
@@ -162,6 +164,8 @@ class MainDialog(QMainWindow):
         self.ui.angle_radio_button.setFont(QFont('Arial', 14))
         # 设置按钮为按下不弹起
         self.ui.show_video_button.setCheckable(True)
+        self.ui.front_camera_video.setCheckable(True)
+        self.ui.back_camera_video.setCheckable(True)
 
     # 初始化背景图片
     def init_image(self):
@@ -385,9 +389,9 @@ class MainDialog(QMainWindow):
                 save_path = os.path.join(config.save_imgs_dir, str_time + 'back_.jpg')
         else:
             if b_front:
-                save_path = os.path.join(config.save_imgs_dir, str_time + 'front_.mp4')
+                save_path = os.path.join(config.save_imgs_dir, str_time + 'front_.avi')
             else:
-                save_path = os.path.join(config.save_imgs_dir, str_time + 'back_.mp4')
+                save_path = os.path.join(config.save_imgs_dir, str_time + 'back_.avi')
         return save_path
 
     # 前摄截图提示
@@ -410,15 +414,31 @@ class MainDialog(QMainWindow):
 
     # 前摄录像提示
     def front_video_info(self):
-        save_path = self.get_path(b_save_img=False)
-        self.save_video(front=True, start=True)
-        reply = QMessageBox.question(self, '提示', '开始录像，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        # 开始录像
+        if self.ui.front_camera_video.isChecked():
+            save_path = self.get_path(b_save_img=False)
+            self.is_write_frame_front = True
+            self.save_video(front=True, start=True, save_path=save_path)
+            show_msg = '开始录像，路径:' + save_path
+        # 结束录像
+        else:
+            self.is_write_frame_front = False
+            show_msg = '结束录制'
+        reply = QMessageBox.question(self, '提示', show_msg, QMessageBox.Close, QMessageBox.Close)
 
     # 后摄录像提示
     def back_video_info(self):
-        save_path = self.get_path(b_save_img=False, b_front=False)
-        self.save_video(front=False, start=True)
-        reply = QMessageBox.question(self, '提示', '开始录像，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        # 开始录像
+        if self.ui.back_camera_video.isChecked():
+            save_path = self.get_path(b_save_img=False, b_front=False)
+            self.is_write_frame_back = True
+            self.save_video(front=False, start=True, save_path=save_path)
+            show_msg = '开始录像，路径:' + save_path
+        # 结束录像
+        else:
+            self.is_write_frame_back = False
+            show_msg = '结束录制'
+        reply = QMessageBox.question(self, '提示', show_msg, QMessageBox.Close, QMessageBox.Close)
 
     # 初始化电机
     def init_motor(self):
@@ -466,8 +486,26 @@ class MainDialog(QMainWindow):
         :param start: 是否是开始保存 True开始 False 结束保存
         :return:
         """
-        # TODO 保存视频
-        pass
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        if front:
+            if isinstance(self.frame_front, np.ndarray):
+                print('self.frame_front',self.frame_front.shape)
+                out = cv2.VideoWriter(save_path, fourcc, 10.0,
+                                      (self.frame_front.shape[0], self.frame_front.shape[1]))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
+                while self.is_write_frame_front:
+                    out.write(self.frame_front)
+                out.release()
+            else:
+                return '前摄没有数据'
+        else:
+            if isinstance(self.frame_back, np.ndarray):
+                out = cv2.VideoWriter(save_path, fourcc, 10.0,
+                                      (self.frame_back.shape[0], self.frame_back.shape[1]))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
+                while self.is_write_frame_back:
+                    out.write(self.frame_front)
+                out.release()
+            else:
+                return '后摄没有数据'
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:

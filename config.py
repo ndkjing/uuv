@@ -41,6 +41,7 @@ server_port = 5566
 # tcp_server_ip = utils.get_host_ip() # 自动获取ip
 tcp_server_ip = server_ip
 tcp_server_port = 5566
+only_joystick=0  # 是否只是用手柄不适用键盘  0 都是用  1 只是用手柄
 #1 qt tcp 2 tcp
 tcp_server_type = 1
 front_video_src = 'rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_1?expire=1665304393&id=368798413455241216&t=7a806071f327825e868312b6a548bb01cf94dbf124112d419f0d97d5cebb658b&ev=100'

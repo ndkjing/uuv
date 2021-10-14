@@ -21,7 +21,7 @@ def Singleton(cls):
 
 @Singleton
 class DataManager(object):
-    def __init__(self, only_joystick=False):
+    def __init__(self):
         self.tcp_server_obj = tcpServer.TcpServerQt()
         # if config.tcp_server_type == 1:
         #     self.tcp_server_obj = tcpServer.TcpServerQt()
@@ -31,11 +31,11 @@ class DataManager(object):
         # 自稳 0 非自稳 1 自稳  稳定深度和x,y,z角度
         self.is_auto = 0
         # 滑动条油门
-        self.speed_slider_value = 0
-        self.speed_slider_value = 0
-        self.speed_slider_value = 0
+        self.speed_slider_value = 30
+        self.deep_slider_value = 0
+        self.angle_slider_value = 0
         self.move = 0
-        self.speed = 0.5  # 速度
+        self.speed = 30 # 油门大小 0-99
         self.camera = 0
         self.light = 0
         self.sonar = 0
@@ -45,7 +45,6 @@ class DataManager(object):
         self.backup_pwm = [0, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         self.receive_pwm = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         self.is_start = 0  # 是否已开启
-        self.only_joystick = only_joystick
 
     def init_run(self):
         t1 = threading.Thread(target=self.tcp_server_obj.wait_connect)
@@ -88,23 +87,23 @@ class DataManager(object):
             if joy_move != 0:
                 move_info = 'move%sz' % joy_move
                 speed_info = 'speed%sz' % joy_speed
-            elif self.only_joystick:
+            elif config.only_joystick:
                 move_info = 'move%sz' % joy_move
                 speed_info = 'speed%sz' % joy_speed
             else:
                 move_info = 'move%sz' % self.move
-                speed_info = 'speed%sz' % self.speed
+                speed_info = 'speed%sz' % self.speed_slider_value
             send_data_list = []
             camera_info = 'camera%sz' % self.joystick_obj.camera_steer
             light_info = 'light%sz' % self.joystick_obj.b_light
             sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
-            arm_info = 'arm%sz' % self.joystick_obj.arm
             arm_info = 'arm%sz' % self.joystick_obj.arm
             pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
             mode_info = 'mode%sz' % (self.is_auto)
             backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             send_data_method = 1
             send_data_list.append(move_info)
+            send_data_list.append(speed_info)
             send_data_list.append(camera_info)
             send_data_list.append(light_info)
             send_data_list.append(sonar_info)
@@ -131,7 +130,6 @@ class DataManager(object):
                 continue
             recv_data = self.tcp_server_obj.client.recv(1024)
             print("[*] Received: %s" % recv_data)
-            # TODO 解析tcp数据复制给 compass等
 
 
 if __name__ == '__main__':
