@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['run_pyqt.py'],
+a = Analysis(['run_pyqt2.py'],
              pathex=['./'],
              binaries=[],
              datas=[],
@@ -31,4 +31,4 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True , icon='F:\\pythonProject\\ship\\statics\\planet.ico')
+          console=True , icon='F:\\pythonProject\\uuv\\statics\\logo.ico')

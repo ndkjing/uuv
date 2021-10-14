@@ -5,7 +5,7 @@ if __name__ == '__main__':
             '-n uuv',  # 可执行文件名称
             '-F',  # 打包单文件
             # '-w', #是否以控制台黑窗口运行
-            r'--icon=F:\pythonProject\ship\statics\planet.ico',  # 可执行程序图标
+            r'--icon=F:\pythonProject\uuv\statics\logo.ico',  # 可执行程序图标
             '-y',
             '--clean',
             '--workpath=build',

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1118</width>
-    <height>720</height>
+    <width>1920</width>
+    <height>1080</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -168,6 +168,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="show_video_button">
+         <property name="text">
+          <string>显示视频</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="temperature_label">
          <property name="text">
           <string>水温</string>
@@ -319,7 +326,7 @@
              <item>
               <widget class="QLabel" name="back_video_label">
                <property name="text">
-                <string>TextLabel</string>
+                <string>后摄</string>
                </property>
               </widget>
              </item>
@@ -369,30 +376,16 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QLabel" name="angle_z_label">
-                  <property name="text">
-                   <string>angle_x_label</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QLabel" name="angle_y_label">
                   <property name="text">
-                   <string>angle_x_label</string>
+                   <string>横滚</string>
                   </property>
                  </widget>
                 </item>
                 <item>
-                 <widget class="QLabel" name="angle_x_label">
+                 <widget class="QLabel" name="angle_z_label">
                   <property name="text">
-                   <string>angle_x_label</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="test_paint_box">
-                  <property name="title">
-                   <string>GroupBox</string>
+                   <string>偏航</string>
                   </property>
                  </widget>
                 </item>
@@ -442,7 +435,7 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QLabel" name="label">
+                    <widget class="QLabel" name="slider_label">
                      <property name="text">
                       <string>滑动调节条</string>
                      </property>
@@ -622,7 +615,7 @@
           <item>
            <widget class="QLabel" name="front_video_label">
             <property name="text">
-             <string>TextLabel</string>
+             <string>前摄</string>
             </property>
            </widget>
           </item>
@@ -639,7 +632,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1118</width>
+     <width>1920</width>
      <height>23</height>
     </rect>
    </property>

@@ -8,13 +8,16 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import cv2
+from qt_material import apply_stylesheet
 # from vtk import *
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import numpy as np
-from stl import mesh
-import pyqtgraph.opengl as gl
+# from stl import mesh
+# import pyqtgraph.opengl as gl
+import math
 
 from dataManager import data_manager
+from common import draw_angle
 import config
 from storage import save_data
 
@@ -26,7 +29,7 @@ class SettingWindow(QDialog):
         self.ui.setupUi(self)
 
 
-class WorkerThread(QThread):
+class JpystickThread(QThread):
     finish = pyqtSignal(int)
 
     def __init__(self, parent=None, run_func=None):
@@ -36,27 +39,22 @@ class WorkerThread(QThread):
     def run(self):
         self.run_func()
 
-class Camera:
-    """摄像头对象"""
 
-    def __init__(self, url, out_label):
+class CameraThread(QThread):
+    """
+    摄像头对象
+    """
+
+    def __init__(self, url, out_label, parent=None, run_func=None):
         """初始化方法"""
+        super().__init__(parent)
         self.url = url
         self.outLabel = out_label
+        self.run_func = run_func
 
-    def display(self):
-        """显示"""
-        cap = cv2.VideoCapture(self.url)
-        start_time = time.time()
-        while cap.isOpened():
-            success, frame = cap.read()
-            if success:
-                if (time.time() - start_time) > 0.1:
-                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-                    img = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
-                    self.outLabel.setPixmap(QPixmap.fromImage(img))
-                    cv2.waitKey(1)
-                    start_time = time.time()
+    def run(self):
+        self.run_func(self.url, self.outLabel)
+
 
 class MainDialog(QMainWindow):
     def __init__(self, parent=None):
@@ -64,20 +62,15 @@ class MainDialog(QMainWindow):
         self.ui = main_ui.Ui_MainWindow()
         self.ui.setupUi(self)
         self.datamanager_obj = data_manager.DataManager()
+        self.draw_angle_obj = draw_angle.DrawAngle(20, 200)
         self.timer = QTimer()
         self.timer.timeout.connect(self.send_data)
         self.timer.timeout.connect(self.update_base_info)
         self.timer.start(100)
         self.timer1 = QTimer()  # 定时器
         self.timer1.timeout.connect(self.update)
+        self.timer1.timeout.connect(self.paint_angle)  # 更新角度
         self.timer1.start(1000)  # 每1s 更新一次
-        # 显示视频
-        self.open_flag = False
-        self.painter = QPainter(self)
-        self.front_video_stream = None
-        self.back_video_stream = None
-        self.front_video_stream = cv2.VideoCapture(config.front_video_src)
-        self.back_video_stream = cv2.VideoCapture(config.back_video_src)
         # 显示三维模型
         # self.currentSTL = None
         # self.lastDir = None
@@ -85,8 +78,7 @@ class MainDialog(QMainWindow):
         # self.viewer = gl.GLViewWidget()
         # self.ui.view_layout.addWidget(self.viewer, 1)
         # self.show_view()
-        self.label1 = angle.Clock_paint()
-        self.ui.verticalLayout_2.addWidget(self.label1)
+
         # 设置页面
         self.setting_dlg = SettingWindow()
         # 绑定修改数据
@@ -94,16 +86,90 @@ class MainDialog(QMainWindow):
         # 前摄后后摄图片
         self.frame_front = None
         self.frame_back = None
-
-        # 长时间的工作放到这里
-        # self.tcp_work = WorkerThread(parent=None, run_func=self.datamanager_obj.tcp_server_obj.wait_connect)
-        # self.work.finish.connect(self.showResult)
-        # self.tcp_work.start()
-        self.joystick_work = WorkerThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
-        self.joystick_work.finish.connect(self.showResult)
+        # 放在线程中的人物
+        # 显示视频
+        self.open_flag = False
+        self.front_video_work = CameraThread(url=config.front_video_src, out_label=self.ui.front_video_label,
+                                             parent=None,
+                                             run_func=self.display_video)
+        self.front_video_work.start()
+        self.back_video_work = CameraThread(url=config.back_video_src, out_label=self.ui.back_video_label, parent=None,
+                                            run_func=self.display_video)
+        self.back_video_work.start()
+        # 获取游戏手柄数据
+        self.joystick_work = JpystickThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
         self.joystick_work.start()
         # 更新pid参数
         self.update_pid(value=None)
+        self.init_base_ui()
+
+    def paint_angle(self):
+        # 绘制角度
+        # self.ui.angle_x_label.setScaledContents(True)
+        self.draw_angle_obj.draw_y(self.datamanager_obj.tcp_server_obj.theta_list[1])
+        self.draw_angle_obj.draw_z(self.datamanager_obj.tcp_server_obj.theta_list[2])
+        if os.path.exists(config.save_angle_y_path):
+            pix_y = QPixmap(config.save_angle_y_path)
+            self.ui.angle_y_label.setPixmap(pix_y)
+        if os.path.exists(config.save_angle_z_path):
+            pix_z = QPixmap(config.save_angle_z_path)
+            self.ui.angle_z_label.setPixmap(pix_z)
+        # 下面方式不行 暂时没弄懂为什么
+        # self.horizon_layout2 = QHBoxLayout()
+        # self.label_5 = angle.Clock_paint()
+        # self.ui.horizontalLayout_3.addWidget(self.label_5)
+
+    def init_base_ui(self):
+        """
+        初始化UI和设置一些UI启动值
+        :return:
+        """
+        # 滑动条最大值在左边，所以这样设置
+        self.ui.speed_slider.setValue(self.ui.speed_slider.maximum() - 30)
+        self.ui.deep_slider.setValue(self.ui.deep_slider.maximum())
+        self.ui.angle_slider.setValue(self.ui.angle_slider.maximum())
+        # 设置字体大小
+        self.ui.logo_label.setFont(QFont('Arial', 16))
+        self.ui.pressure_label.setFont(QFont('Arial', 14))
+        self.ui.speed_label.setFont(QFont('Arial', 14))
+        self.ui.motor_lock_label.setFont(QFont('Arial', 14))
+        self.ui.leak_label.setFont(QFont('Arial', 14))
+        self.ui.light_label.setFont(QFont('Arial', 14))
+        self.ui.sonar_label.setFont(QFont('Arial', 14))
+        self.ui.camera_steer_label.setFont(QFont('Arial', 14))
+        self.ui.arm_label.setFont(QFont('Arial', 14))
+
+        self.ui.front_video_label.setFont(QFont('Arial', 14))
+        self.ui.front_camera_cap.setFont(QFont('Arial', 14))
+        self.ui.front_camera_video.setFont(QFont('Arial', 14))
+        self.ui.back_video_label.setFont(QFont('Arial', 14))
+        self.ui.back_camera_cap.setFont(QFont('Arial', 14))
+        self.ui.back_camera_video.setFont(QFont('Arial', 14))
+        self.ui.mode_label.setFont(QFont('Arial', 14))
+        self.ui.joystick_label.setFont(QFont('Arial', 14))
+        self.ui.deep_label.setFont(QFont('Arial', 14))
+        self.ui.temperature_label.setFont(QFont('Arial', 14))
+        self.ui.show_video_button.setFont(QFont('Arial', 14))
+        self.ui.switch_video_button.setFont(QFont('Arial', 14))
+        self.ui.init_motor_btn.setFont(QFont('Arial', 14))
+        self.ui.setting_btn.setFont(QFont('Arial', 14))
+        self.ui.slider_label.setFont(QFont('Arial', 16))
+        self.ui.speed_slider_label.setFont(QFont('Arial', 14))
+        self.ui.deep_slider_label.setFont(QFont('Arial', 14))
+        self.ui.angle_slider_label.setFont(QFont('Arial', 14))
+        self.ui.speed_radio_button.setFont(QFont('Arial', 14))
+        self.ui.deep_radio_button.setFont(QFont('Arial', 14))
+        self.ui.angle_radio_button.setFont(QFont('Arial', 14))
+        # 设置按钮为按下不弹起
+        self.ui.show_video_button.setCheckable(True)
+
+    # 初始化背景图片
+    def init_image(self):
+        self.ui.init_motor_btn.setStyleSheet('QPushButton{color:#FFFFFF,border-image:url(./statics/images/装饰.png)}')
+        self.ui.back_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
+        self.ui.back_camera_cap.setStyleSheet('QLabel{color:#FFFFFF}')
+        self.ui.front_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
+        self.ui.front_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
 
     # 绑定信号和槽
     def connect_single_slot(self):
@@ -132,12 +198,27 @@ class MainDialog(QMainWindow):
         self.ui.back_camera_video.clicked.connect(self.back_video_info)
         # 使能电机
         self.ui.init_motor_btn.clicked.connect(self.init_motor)
+        # 滑动条拖动
+        self.ui.speed_slider.valueChanged.connect(self.update_slider)
+        self.ui.deep_slider.valueChanged.connect(self.update_slider)
+        self.ui.angle_slider.valueChanged.connect(self.update_slider)
+        self.ui.speed_radio_button.clicked.connect(self.update_slider)
+        self.ui.angle_radio_button.clicked.connect(self.update_slider)
+        self.ui.deep_radio_button.clicked.connect(self.update_slider)
 
-    def showResult(self):
-        print('show result')
-        self.joystick_work = WorkerThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
-        self.joystick_work.finish.connect(self.showResult)
-        self.joystick_work.start()
+    def update_slider(self):
+        speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value()
+        deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
+        angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
+        self.ui.speed_slider_label.setText("油门: %s" % speed_slider_value)
+        self.ui.deep_slider_label.setText("深度: %s" % deep_slider_value)
+        self.ui.angle_slider_label.setText("角度: %s" % angle_slider_value)
+        if self.ui.speed_radio_button.isChecked():
+            self.datamanager_obj.speed_slider_value = speed_slider_value
+        if self.ui.deep_radio_button.isChecked():
+            self.datamanager_obj.deep_slider_value = deep_slider_value
+        if self.ui.angle_radio_button.isChecked():
+            self.datamanager_obj.angle_slider_value = angle_slider_value
 
     # 跟新pid参数
     def update_pid(self, value):
@@ -214,10 +295,43 @@ class MainDialog(QMainWindow):
         # TODO
         print('close_joystick')
 
+    def display_video(self, url, label):
+        """显示视频"""
+        while True:
+            if not self.ui.show_video_button.isChecked():
+                time.sleep(1)
+                continue
+            else:
+                break
+        cap = cv2.VideoCapture(url)
+        start_time = time.time()
+        print(cap, cap.isOpened())
+        while cap.isOpened():
+            success, frame = cap.read()
+            if success:
+                if (time.time() - start_time) > 0.1:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    if url == config.front_video_src:
+                        self.frame_front = frame
+                        # frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
+                        frame = cv2.resize(frame,
+                                           (self.ui.front_video_label.width(), self.ui.front_video_label.height()),
+                                           interpolation=cv2.INTER_AREA)
+                    else:
+                        self.frame_back = frame
+                        frame = cv2.resize(frame, (self.ui.back_video_label.width(), self.ui.back_video_label.height()),
+                                           interpolation=cv2.INTER_AREA)
+                    img = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+                    label.setPixmap(QPixmap.fromImage(img))
+                    cv2.waitKey(1)
+                    start_time = time.time()
+
     # 发送数据
     def send_data(self):
         if self.datamanager_obj.tcp_server_obj.b_connect:
             self.datamanager_obj.send_tcp_data(b_once=True)
+        # 测试显示数据
+        # print('front_video_label',self.ui.front_video_label.size())
 
     # 更新基础数据
     def update_base_info(self):
@@ -225,7 +339,36 @@ class MainDialog(QMainWindow):
             self.ui.joystick_label.setText("遥控")
         else:
             self.ui.joystick_label.setText("无遥控")
+        deep_str = "深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
+        press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
+        temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
+        leak_str = "未漏水 %d" % self.datamanager_obj.tcp_server_obj.is_leak_water
+        speed_str = "速度 %% %d" % self.datamanager_obj.tcp_server_obj.speed
+        light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
+        sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
+        camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
+        arm_str = "机械臂： %d" % self.datamanager_obj.tcp_server_obj.arm_pwm
+        x_angle_str = "x角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[0]
+        y_angle_str = "y角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[1]
+        z_angle_str = "z角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[2]
+        self.ui.pressure_label.setText(press_str)
+        self.ui.temperature_label.setText(temperature_str)
+        self.ui.leak_label.setText(leak_str)
+        self.ui.deep_label.setText(deep_str)
+        self.ui.speed_label.setText(speed_str)
+        self.ui.light_label.setText(light_str)
+        self.ui.sonar_label.setText(sonar_str)
+        self.ui.camera_steer_label.setText(camera_steer_str)
+        self.ui.arm_label.setText(arm_str)
+        # 直接字符显示角度
+        # self.ui.angle_x_label.setText(x_angle_str)
+        # self.ui.angle_y_label.setText(y_angle_str)
+        # self.ui.angle_z_label.setText(z_angle_str)
 
+        control_info_dict = {0: ' 停止', 1: ' 前进', 2: ' 后退', 3: ' 左转', 4: ' 右转', 5: ' 上升', 6: ' 下降', 7: ' 左移',
+                             8: ' 右移'}
+        mode_str = control_info_dict[self.datamanager_obj.move]
+        self.ui.mode_label.setText(mode_str)
 
     # 获取保存数据路径
     def get_path(self, b_save_img=True, b_front=True):
@@ -250,14 +393,20 @@ class MainDialog(QMainWindow):
     # 前摄截图提示
     def front_cap_info(self):
         save_path = self.get_path()
-        self.save_img(front=True, save_path=save_path)
-        reply = QMessageBox.question(self, '提示', '截图成功，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        return_info = self.save_img(front=True, save_path=save_path)
+        if return_info is None:
+            reply = QMessageBox.question(self, '提示', '截图成功，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        else:
+            QMessageBox.question(self, '提示', return_info, QMessageBox.Close, QMessageBox.Close)
 
     # 后摄截图提示
     def back_cap_info(self):
         save_path = self.get_path(b_front=False)
-        self.save_img(front=False, save_path=save_path)
-        reply = QMessageBox.question(self, '提示', '截图成功，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        return_info = self.save_img(front=False, save_path=save_path)
+        if return_info is None:
+            reply = QMessageBox.question(self, '提示', '截图成功，路径:' + save_path, QMessageBox.Close, QMessageBox.Close)
+        else:
+            QMessageBox.question(self, '提示', return_info, QMessageBox.Close, QMessageBox.Close)
 
     # 前摄录像提示
     def front_video_info(self):
@@ -274,7 +423,19 @@ class MainDialog(QMainWindow):
     # 初始化电机
     def init_motor(self):
         reply = QMessageBox.question(self, '提示', '初始化电机成功', QMessageBox.Close, QMessageBox.Close)
-        # TODO 发送初始化电机指令
+        #  控制往各个方向运动来初始化
+        self.datamanager_obj.move = 0
+        time.sleep(2)
+        self.datamanager_obj.move = 1
+        time.sleep(2)
+        self.datamanager_obj.move = 2
+        time.sleep(2)
+        self.datamanager_obj.move = 5
+        time.sleep(2)
+        self.datamanager_obj.move = 6
+        time.sleep(2)
+        self.datamanager_obj.move = 0
+        time.sleep(2)
 
     # 保存图片
     def save_img(self, front=True, save_path=None):
@@ -285,8 +446,15 @@ class MainDialog(QMainWindow):
         :return:
         """
         if front:
-            cv2.imwrite(save_path, self.frame_front)
+            if self.frame_front is None:
+                print('前摄无数据')
+                return '前摄无数据'
+            else:
+                cv2.imwrite(save_path, self.frame_front)
         else:
+            if self.frame_back is None:
+                print('后摄无数据')
+                return '后摄无数据'
             cv2.imwrite(save_path, self.frame_back)
 
     # 保存视频
@@ -301,33 +469,6 @@ class MainDialog(QMainWindow):
         # TODO 保存视频
         pass
 
-    def show_view(self):
-        m = mesh.Mesh.from_file('statics/holecube.stl')
-        points = m.points.reshape(-1, 3)
-        faces = np.arange(points.shape[0]).reshape(-1, 3)
-        meshdata = gl.MeshData(vertexes=points, faces=faces, faceColors=[0.5, 0.5, 0.5, 0.5])
-        mesh_obj = gl.GLMeshItem(meshdata=meshdata, smooth=True, drawFaces=True, drawEdges=True,
-                                 edgeColor=(1, 1, 1, 1))
-        self.viewer.addItem(mesh_obj)
-
-    def paintEvent(self, event):
-        if self.open_flag:
-            ret1, frame_front = self.front_video_stream.read()
-            self.frame_front = frame_front
-            frame_front = cv2.resize(frame_front, (640, 480), interpolation=cv2.INTER_AREA)
-            frame_front = cv2.cvtColor(frame_front, cv2.COLOR_BGR2RGB)
-            ret1, frame_back = self.back_video_stream.read()
-            self.frame_back = frame_back
-            frame_back = cv2.resize(frame_back, (150, 150), interpolation=cv2.INTER_AREA)
-            frame_back = cv2.cvtColor(frame_back, cv2.COLOR_BGR2RGB)
-            self.Qframe_front = QImage(frame_front.data, frame_front.shape[1], frame_front.shape[0],
-                                       frame_front.shape[1] * 3, QImage.Format_RGB888)
-            self.Qframe_back = QImage(frame_back.data, frame_back.shape[1], frame_back.shape[0],
-                                      frame_back.shape[1] * 3, QImage.Format_RGB888)
-            self.ui.front_video_label.setPixmap(QPixmap.fromImage(self.Qframe_front))
-            self.ui.back_video_label.setPixmap(QPixmap.fromImage(self.Qframe_back))
-            self.update()
-
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
             self.datamanager_obj.move = 1
@@ -337,23 +478,31 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.move = 2
         elif keyevent.text() in ['d', 'D']:
             self.datamanager_obj.move = 4
-        elif keyevent.text() in ['q', 'Q']:
-            self.datamanager_obj.move = 5
-        elif keyevent.text() in ['e', 'E']:
-            self.datamanager_obj.move = 6
         elif keyevent.text() in ['z', 'Z']:
-            self.datamanager_obj.move = 7
+            self.datamanager_obj.move = 5
         elif keyevent.text() in ['c', 'C']:
+            self.datamanager_obj.move = 6
+        elif keyevent.text() in ['q', 'Q']:
+            self.datamanager_obj.move = 7
+        elif keyevent.text() in ['e', 'E']:
             self.datamanager_obj.move = 8
         elif keyevent.text() in ['x', 'X']:
             self.datamanager_obj.move = 0
+        elif keyevent.text() in ['r', 'R']:
+            if self.datamanager_obj.is_auto:
+                self.datamanager_obj.is_auto = 0
+            else:
+                self.datamanager_obj.is_auto = 1
 
 
 if __name__ == '__main__':
     myapp = QApplication(sys.argv)
     main_windows = MainDialog()
+    main_windows.resize(1920, 1080)
+    # main_windows.setStyleSheet("#MainWindow{border-image:url(./statics/images/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
+    apply_stylesheet(myapp, theme='dark_teal.xml')
     main_windows.show()
     sys.exit(myapp.exec_())

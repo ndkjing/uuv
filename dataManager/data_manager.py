@@ -99,6 +99,7 @@ class DataManager(object):
             light_info = 'light%sz' % self.joystick_obj.b_light
             sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
             arm_info = 'arm%sz' % self.joystick_obj.arm
+            arm_info = 'arm%sz' % self.joystick_obj.arm
             pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
             mode_info = 'mode%sz' % (self.is_auto)
             backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
