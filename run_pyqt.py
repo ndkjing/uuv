@@ -9,6 +9,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 import cv2
+from PIL import ImageFont, ImageDraw, Image
 from qt_material import apply_stylesheet
 # from vtk import *
 # from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -55,6 +56,14 @@ class CameraThread(QThread):
 
     def run(self):
         self.run_func(self.url, self.outLabel)
+
+
+# 检验是否包含中文字符
+def is_contain_chinese(strs):
+    for _char in strs:
+        if not '\u4e00' <= _char <= '\u9fa5':
+            return True
+    return False
 
 
 class SaveVideoThread(QThread):
@@ -386,7 +395,6 @@ class MainDialog(QMainWindow):
                     font = cv2.FONT_HERSHEY_SIMPLEX
                     for k, v in self.frame_text_dict.items():
                         if len(v) == 3:
-                            print(frame.shape)
                             if v[0] == 0:
                                 w = 100
                             elif v[0] == 0:
@@ -399,7 +407,17 @@ class MainDialog(QMainWindow):
                                 h = int(frame.shape[0] / 2)
                             else:
                                 h = frame.shape[0] - 100
-                            cv2.putText(frame, v[2], (w, h), font, 1, (200, 255, 155), 1, cv2.LINE_AA)
+                            # 判断是否包含中文
+                            if is_contain_chinese(v[2]):
+                                fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径  存在放jing_vision/utils下
+                                font = ImageFont.truetype(fontpath, 40)  # 32为字体大小
+                                img_pil = Image.fromarray(frame)
+                                draw = ImageDraw.Draw(img_pil)
+                                draw.text((h, w), v[2], font=font, fill=(100, 1, 1, 1))
+                                frame = np.array(img_pil)
+                            else:
+                                font = cv2.FONT_HERSHEY_SIMPLEX
+                                cv2.putText(frame, v[2], (w, h), font, 2, (200, 255, 155), 1, cv2.LINE_AA)
                     if url == config.front_video_src:
                         self.frame_front = frame
                         # frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
