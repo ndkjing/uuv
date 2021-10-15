@@ -118,7 +118,8 @@ class DataManager(object):
                 else:
                     pass
             except ConnectionResetError as e:
-                self.tcp_server_obj.client.close()
+                print('tcp_server_obj.write_data',e)
+                self.tcp_server_obj.client.disconnected_slot()
             if b_once:
                 return
 

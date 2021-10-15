@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>766</width>
-    <height>418</height>
+    <width>1296</width>
+    <height>695</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,7 +31,10 @@
      <property name="title">
       <string/>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,1,1">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <property name="leftMargin">
        <number>0</number>
       </property>
@@ -45,19 +48,223 @@
        <number>0</number>
       </property>
       <item>
+       <widget class="QGroupBox" name="groupBox_15">
+        <property name="title">
+         <string/>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QGroupBox" name="groupBox_18">
+           <property name="title">
+            <string>GroupBox</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>文字1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="text1_line_edit"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text1_x_combo_box">
+              <item>
+               <property name="text">
+                <string>水平左</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平右</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text1_y_combo_box">
+              <item>
+               <property name="text">
+                <string>垂直上</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直下</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="text1_button">
+              <property name="text">
+               <string>确定</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_17">
+           <property name="title">
+            <string>GroupBox</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_12">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>文字2</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="text2_line_edit"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text2_x_combo_box">
+              <item>
+               <property name="text">
+                <string>水平左</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平右</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text2_y_combo_box">
+              <item>
+               <property name="text">
+                <string>垂直上</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直下</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="text2_button">
+              <property name="text">
+               <string>确定</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
+          <widget class="QGroupBox" name="groupBox_16">
+           <property name="title">
+            <string>GroupBox</string>
+           </property>
+           <layout class="QHBoxLayout" name="horizontalLayout_13">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>文字3</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="text3_line_edit"/>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text3_x_combo_box">
+              <item>
+               <property name="text">
+                <string>水平左</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>水平右</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="text3_y_combo_box">
+              <item>
+               <property name="text">
+                <string>垂直上</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直中</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>垂直右</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="text3_button">
+              <property name="text">
+               <string>确定</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QGroupBox" name="groupBox_3">
         <property name="title">
          <string/>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2">
-         <item>
+        <layout class="QGridLayout" name="gridLayout">
+         <item row="0" column="0">
           <widget class="QLabel" name="ip_address_label">
            <property name="text">
             <string>IP地址</string>
            </property>
           </widget>
          </item>
-         <item>
+         <item row="1" column="0">
+          <widget class="QLineEdit" name="ip_address_line_edit"/>
+         </item>
+         <item row="1" column="1">
           <widget class="QPushButton" name="start_server_btn">
            <property name="text">
             <string>开启服务端</string>
@@ -65,13 +272,6 @@
            <property name="icon">
             <iconset>
              <normaloff>:/icon/statics/resource/icon/arrow-000.png</normaloff>:/icon/statics/resource/icon/arrow-000.png</iconset>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="close_server_btn">
-           <property name="text">
-            <string>关闭服务端</string>
            </property>
           </widget>
          </item>
@@ -115,27 +315,19 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_4">
          <item>
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="label">
            <property name="text">
-            <string>TextLabel</string>
+            <string>前摄地址：</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_5">
-           <property name="text">
-            <string>PushButton</string>
-           </property>
-          </widget>
+          <widget class="QLineEdit" name="fva_line_edit"/>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_6">
+          <widget class="QPushButton" name="fva_button">
            <property name="text">
-            <string>PushButton</string>
-           </property>
-           <property name="icon">
-            <iconset resource="../resource.qrc">
-             <normaloff>:/icon/penguin.png</normaloff>:/icon/penguin.png</iconset>
+            <string>确定</string>
            </property>
           </widget>
          </item>
@@ -150,7 +342,7 @@
      <property name="title">
       <string/>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -309,7 +501,7 @@
         <property name="title">
          <string/>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,1,1">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -402,6 +594,25 @@
         <property name="title">
          <string/>
         </property>
+        <layout class="QHBoxLayout" name="horizontalLayout_11">
+         <item>
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>后摄地址：</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="bva_line_edit"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="bva_button">
+           <property name="text">
+            <string>确定</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>

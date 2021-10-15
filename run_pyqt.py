@@ -1,4 +1,5 @@
 # coding:utf-8
+import copy
 import sys
 import os
 import time
@@ -31,6 +32,7 @@ class SettingWindow(QDialog):
 
 class JpystickThread(QThread):
     finish = pyqtSignal(int)
+
     def __init__(self, parent=None, run_func=None):
         super().__init__(parent)
         self.run_func = run_func
@@ -43,6 +45,7 @@ class CameraThread(QThread):
     """
     摄像头对象
     """
+
     def __init__(self, url, out_label, parent=None, run_func=None):
         """初始化方法"""
         super().__init__(parent)
@@ -52,6 +55,22 @@ class CameraThread(QThread):
 
     def run(self):
         self.run_func(self.url, self.outLabel)
+
+
+class SaveVideoThread(QThread):
+    """
+    保存视频类
+    """
+
+    def __init__(self, front=True, save_path=None, parent=None, run_func=None):
+        """初始化方法"""
+        super().__init__(parent)
+        self.front = front
+        self.save_path = save_path
+        self.run_func = run_func
+
+    def run(self):
+        self.run_func(self.front, self.save_path)
 
 
 class MainDialog(QMainWindow):
@@ -71,8 +90,10 @@ class MainDialog(QMainWindow):
         self.timer1.start(1000)  # 每1s 更新一次
 
         # 写入视频
-        self.is_write_frame_front = False
-        self.is_write_frame_back = False
+        self.is_write_frame_front = False  # 当前写入视频标志位
+        self.write_frame_front_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
+        self.is_write_frame_back = False  # 当前写入视频标志位
+        self.write_frame_back_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
         # 显示三维模型
         # self.currentSTL = None
         # self.lastDir = None
@@ -88,6 +109,8 @@ class MainDialog(QMainWindow):
         # 前摄后后摄图片
         self.frame_front = None
         self.frame_back = None
+        # 视频上显示字符字典
+        self.frame_text_dict = {'text1': [], 'text2': [], 'text3': []}
         # 放在线程中的人物
         # 显示视频
         self.open_flag = False
@@ -98,6 +121,13 @@ class MainDialog(QMainWindow):
         self.back_video_work = CameraThread(url=config.back_video_src, out_label=self.ui.back_video_label, parent=None,
                                             run_func=self.display_video)
         self.back_video_work.start()
+        # 保存视频
+        self.save_front_video_work = SaveVideoThread(front=True, save_path=None,
+                                                     parent=None,
+                                                     run_func=self.save_video)
+        self.save_back_video_work = SaveVideoThread(front=False, save_path=None,
+                                                    parent=None,
+                                                    run_func=self.save_video)
         # 获取游戏手柄数据
         self.joystick_work = JpystickThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
         self.joystick_work.start()
@@ -105,8 +135,12 @@ class MainDialog(QMainWindow):
         self.update_pid(value=None)
         self.init_base_ui()
 
+    # 绘制角度
     def paint_angle(self):
-        # 绘制角度
+        """
+        绘制陀螺仪角度
+        :return:
+        """
         # self.ui.angle_x_label.setScaledContents(True)
         self.draw_angle_obj.draw_y(self.datamanager_obj.tcp_server_obj.theta_list[1])
         self.draw_angle_obj.draw_z(self.datamanager_obj.tcp_server_obj.theta_list[2])
@@ -121,6 +155,7 @@ class MainDialog(QMainWindow):
         # self.label_5 = angle.Clock_paint()
         # self.ui.horizontalLayout_3.addWidget(self.label_5)
 
+    # 初始化UI
     def init_base_ui(self):
         """
         初始化UI和设置一些UI启动值
@@ -184,7 +219,6 @@ class MainDialog(QMainWindow):
         # 修改设置数据
         self.ui.setting_btn.clicked.connect(self.update_setting_data)
         # 打开关闭tcp服务和打开关闭遥控
-        self.setting_dlg.ui.close_server_btn.clicked.connect(self.close_server)
         self.setting_dlg.ui.start_server_btn.clicked.connect(self.start_server)
         self.setting_dlg.ui.start_joystick_btn.clicked.connect(self.start_joystick)
         self.setting_dlg.ui.close_joystick_btn.clicked.connect(self.close_joystick)
@@ -209,6 +243,38 @@ class MainDialog(QMainWindow):
         self.ui.speed_radio_button.clicked.connect(self.update_slider)
         self.ui.angle_radio_button.clicked.connect(self.update_slider)
         self.ui.deep_radio_button.clicked.connect(self.update_slider)
+        # 视频地址设置绑定
+        # 视频添加文字水印绑定
+        self.setting_dlg.ui.text1_button.clicked.connect(self.update_frame_text)
+        self.setting_dlg.ui.text2_button.clicked.connect(self.update_frame_text)
+        self.setting_dlg.ui.text3_button.clicked.connect(self.update_frame_text)
+
+    # 更新视频文字水印
+    def update_frame_text(self):
+        if self.sender() == self.setting_dlg.ui.text1_button:
+            show_text1 = self.setting_dlg.ui.text1_line_edit.text()
+            t1_x = self.setting_dlg.ui.text1_x_combo_box.currentIndex()
+            t1_y = self.setting_dlg.ui.text1_y_combo_box.currentIndex()
+            if show_text1:
+                self.frame_text_dict['text1'] = [t1_x, t1_y, show_text1]
+            else:
+                self.frame_text_dict['text1'] = []
+        elif self.sender() == self.setting_dlg.ui.text2_button:
+            show_text2 = self.setting_dlg.ui.text2_line_edit.text()
+            t2_x = self.setting_dlg.ui.text2_x_combo_box.currentIndex()
+            t2_y = self.setting_dlg.ui.text2_y_combo_box.currentIndex()
+            if show_text2:
+                self.frame_text_dict['text2'] = [t2_x, t2_y, show_text2]
+            else:
+                self.frame_text_dict['text2'] = []
+        elif self.sender() == self.setting_dlg.ui.text3_button:
+            show_text3 = self.setting_dlg.ui.text3_line_edit.text()
+            t3_x = self.setting_dlg.ui.text3_x_combo_box.currentIndex()
+            t3_y = self.setting_dlg.ui.text3_y_combo_box.currentIndex()
+            if show_text3:
+                self.frame_text_dict['text3'] = [t3_x, t3_y, show_text3]
+            else:
+                self.frame_text_dict['text3'] = []
 
     def update_slider(self):
         speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value()
@@ -270,7 +336,7 @@ class MainDialog(QMainWindow):
             data = {'h_pid': self.datamanager_obj.pid, 'v_pid': self.datamanager_obj.pid_v}
             save_data.set_data(data, config.save_pid_path)
 
-    # 更新显示消息
+    # 更新设置数据
     def update_setting_data(self):
         self.setting_dlg.ui.ip_address_label.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip + \
                                                          ':' + str(self.datamanager_obj.tcp_server_obj.bind_port)))
@@ -278,6 +344,7 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.joystick_label.setText('遥控:' + str(self.datamanager_obj.joystick_obj.count))
 
     def start_server(self):
+        self.setting_dlg.ui.ip_address_line_edit.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip))
         print('start_server')
 
     def close_server(self):
@@ -315,6 +382,24 @@ class MainDialog(QMainWindow):
             if success:
                 if (time.time() - start_time) > 0.1:
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                    # 绘制文字
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    for k, v in self.frame_text_dict.items():
+                        if len(v) == 3:
+                            print(frame.shape)
+                            if v[0] == 0:
+                                w = 100
+                            elif v[0] == 0:
+                                w = int(frame.shape[1] / 2)
+                            else:
+                                w = frame.shape[1] - 50
+                            if v[1] == 0:
+                                h = 100
+                            elif v[1] == 0:
+                                h = int(frame.shape[0] / 2)
+                            else:
+                                h = frame.shape[0] - 100
+                            cv2.putText(frame, v[2], (w, h), font, 1, (200, 255, 155), 1, cv2.LINE_AA)
                     if url == config.front_video_src:
                         self.frame_front = frame
                         # frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
@@ -337,7 +422,7 @@ class MainDialog(QMainWindow):
         # 测试显示数据
         # print('front_video_label',self.ui.front_video_label.size())
 
-    # 更新基础数据
+    # 显示数据
     def update_base_info(self):
         if self.datamanager_obj.joystick_obj.b_connect == 1:
             self.ui.joystick_label.setText("遥控")
@@ -417,12 +502,23 @@ class MainDialog(QMainWindow):
         # 开始录像
         if self.ui.front_camera_video.isChecked():
             save_path = self.get_path(b_save_img=False)
+            self.save_front_video_work.save_path = save_path
             self.is_write_frame_front = True
-            self.save_video(front=True, start=True, save_path=save_path)
-            show_msg = '开始录像，路径:' + save_path
+            # 启动保存线程
+            self.save_front_video_work.start()
+            # 如果保存失败则设置按钮为弹起，并提示用户
+            time.sleep(0.2)  # 等待线程中先更新数据
+            if self.write_frame_front_show_msg:
+                show_msg = self.write_frame_front_show_msg
+                self.ui.front_camera_video.setChecked(False)
+                self.write_frame_front_show_msg = ''
+            else:
+                show_msg = '开始录像，路径:' + save_path
         # 结束录像
         else:
+            print('self.ui.front_camera_video.isChecked()', self.ui.front_camera_video.isChecked())
             self.is_write_frame_front = False
+            self.write_frame_front_show_msg = ''
             show_msg = '结束录制'
         reply = QMessageBox.question(self, '提示', show_msg, QMessageBox.Close, QMessageBox.Close)
 
@@ -431,12 +527,21 @@ class MainDialog(QMainWindow):
         # 开始录像
         if self.ui.back_camera_video.isChecked():
             save_path = self.get_path(b_save_img=False, b_front=False)
+            self.save_back_video_work.save_path = save_path
             self.is_write_frame_back = True
-            self.save_video(front=False, start=True, save_path=save_path)
-            show_msg = '开始录像，路径:' + save_path
+            self.save_back_video_work.start()
+            # 如果保存失败则设置按钮为弹起，并提示用户
+            time.sleep(0.2)  # 等待线程中先更新数据
+            if self.write_frame_back_show_msg:
+                show_msg = self.write_frame_back_show_msg
+                self.ui.back_camera_video.setChecked(False)
+                self.write_frame_back_show_msg = ''
+            else:
+                show_msg = '开始录像，路径:' + save_path
         # 结束录像
         else:
             self.is_write_frame_back = False
+            self.write_frame_back_show_msg = ''
             show_msg = '结束录制'
         reply = QMessageBox.question(self, '提示', show_msg, QMessageBox.Close, QMessageBox.Close)
 
@@ -478,7 +583,7 @@ class MainDialog(QMainWindow):
             cv2.imwrite(save_path, self.frame_back)
 
     # 保存视频
-    def save_video(self, front=True, start=True, save_path=None):
+    def save_video(self, front=True, save_path=None):
         """
         保存视频
         :param save_path:
@@ -489,23 +594,37 @@ class MainDialog(QMainWindow):
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         if front:
             if isinstance(self.frame_front, np.ndarray):
-                print('self.frame_front',self.frame_front.shape)
+                # print('self.frame_front', self.frame_front.shape)
                 out = cv2.VideoWriter(save_path, fourcc, 10.0,
-                                      (self.frame_front.shape[0], self.frame_front.shape[1]))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
+                                      (1920, 1080))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
                 while self.is_write_frame_front:
-                    out.write(self.frame_front)
+                    write_frame = copy.deepcopy(self.frame_front)
+                    write_frame = cv2.resize(write_frame, (1920, 1080))
+                    rgb_write_frame = write_frame[..., ::-1]
+                    out.write(rgb_write_frame)
+                    # print(time.time(), 'write frame', write_frame.shape)
+                    time.sleep(0.1)
                 out.release()
             else:
-                return '前摄没有数据'
+                self.write_frame_front_show_msg = '保存前摄没有数据'
+                print('write_frame_front_show_msg', self.write_frame_front_show_msg)
+                print('保存前摄没有数据')
         else:
             if isinstance(self.frame_back, np.ndarray):
+                print('save', save_path)
                 out = cv2.VideoWriter(save_path, fourcc, 10.0,
-                                      (self.frame_back.shape[0], self.frame_back.shape[1]))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
+                                      (1920, 1080))  # 图像大小参数按（宽，高）一定得与写入帧大小一致
                 while self.is_write_frame_back:
-                    out.write(self.frame_front)
+                    write_frame = copy.deepcopy(self.frame_back)
+                    write_frame = cv2.resize(write_frame, (1920, 1080))
+                    rgb_write_frame = write_frame[..., ::-1]
+                    out.write(rgb_write_frame)
+                    print(time.time(), 'write frame', write_frame.shape)
+                    time.sleep(0.1)
                 out.release()
             else:
-                return '后摄没有数据'
+                print('保存后摄没有数据')
+                self.write_frame_back_show_msg = '保存后摄没有数据'
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
