@@ -35,7 +35,7 @@ class DataManager(object):
         self.deep_slider_value = 0
         self.angle_slider_value = 0
         self.move = 0
-        self.speed = 30 # 油门大小 0-99
+        self.speed = 2  # 油门大小 1-4
         self.camera = 0
         self.light = 0
         self.sonar = 0
@@ -94,10 +94,14 @@ class DataManager(object):
                 move_info = 'move%sz' % self.move
                 speed_info = 'speed%sz' % self.speed_slider_value
             send_data_list = []
-            camera_info = 'camera%sz' % self.joystick_obj.camera_steer
-            light_info = 'light%sz' % self.joystick_obj.b_light
-            sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
-            arm_info = 'arm%sz' % self.joystick_obj.arm
+            # camera_info = 'camera%sz' % self.joystick_obj.camera_steer
+            # light_info = 'light%sz' % self.joystick_obj.b_light
+            # sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
+            # arm_info = 'arm%sz' % self.joystick_obj.arm
+            camera_info = 'camera%sz' % self.camera
+            light_info = 'light%sz' % self.light
+            sonar_info = 'sonar%sz' % self.sonar
+            arm_info = 'arm%sz' % self.arm
             pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
             mode_info = 'mode%sz' % (self.is_auto)
             backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
@@ -118,7 +122,7 @@ class DataManager(object):
                 else:
                     pass
             except ConnectionResetError as e:
-                print('tcp_server_obj.write_data',e)
+                print('tcp_server_obj.write_data', e)
                 self.tcp_server_obj.client.disconnected_slot()
             if b_once:
                 return

@@ -426,16 +426,20 @@ class MainDialog(QMainWindow):
         # 打开声呐
         self.ui.open_sonar_btn.clicked.connect(self.open_sonar)
 
+    # 打开声呐
     def open_sonar(self):
         command_sonar1 = "F:\\apps\pingviewer_release\deploy\pingviewer.exe"
         command_sonar2 = "D:\\apps\pingviewer_release\deploy\pingviewer.exe"
         command_sonar3 = "F:\pingviewer_release\deploy\pingviewer.exe"
+        command_sonar4 = "D:\pingviewer_release\deploy\pingviewer.exe"
         if os.path.exists(command_sonar1):
             r_v = os.system(command_sonar1)
-        if os.path.exists(command_sonar2):
+        elif os.path.exists(command_sonar2):
             r_v = os.system(command_sonar2)
-        if os.path.exists(command_sonar3):
+        elif os.path.exists(command_sonar3):
             r_v = os.system(command_sonar3)
+        elif os.path.exists(command_sonar4):
+            r_v = os.system(command_sonar4)
 
     def start_video(self):
         print('start video')
@@ -720,10 +724,10 @@ class MainDialog(QMainWindow):
         press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
         temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
         if self.datamanager_obj.tcp_server_obj.is_leak_water < 1000:
-            leak_str = "未漏水"
+            leak_str = "未漏水(%d)"%self.datamanager_obj.tcp_server_obj.is_leak_water
         else:
-            leak_str = "*已漏水*"
-        speed_str = "速度  % d %%" % self.datamanager_obj.tcp_server_obj.speed
+            leak_str = "*已漏水(%d)*"%self.datamanager_obj.tcp_server_obj.is_leak_water
+        speed_str = "速度  % d %%" % (self.datamanager_obj.tcp_server_obj.speed*25)
         light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
         sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
         camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
@@ -938,11 +942,38 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.move = 8
         elif keyevent.text() in ['x', 'X']:
             self.datamanager_obj.move = 0
+        # 自稳
         elif keyevent.text() in ['r', 'R']:
             if self.datamanager_obj.is_auto:
                 self.datamanager_obj.is_auto = 0
             else:
                 self.datamanager_obj.is_auto = 1
+        # 摄像头舵机
+        elif keyevent.text() in ['y', 'Y']:
+            self.datamanager_obj.camera = 2
+        elif keyevent.text() in ['h', 'H']:
+            self.datamanager_obj.camera = 0
+        elif keyevent.text() in ['n', 'N']:
+            self.datamanager_obj.camera = 8
+        # 灯光
+        elif keyevent.text() in ['t', 'T']:
+            if self.datamanager_obj.light:
+                self.datamanager_obj.light = 0
+            else:
+                self.datamanager_obj.light = 1
+        # 声呐
+        elif keyevent.text() in ['g', 'G']:
+            if self.datamanager_obj.sonar:
+                self.datamanager_obj.sonar = 0
+            else:
+                self.datamanager_obj.sonar = 1
+        # 机械臂
+        elif keyevent.text() in ['u', 'U']:
+            self.datamanager_obj.arm = 1
+        elif keyevent.text() in ['j', 'J']:
+            self.datamanager_obj.arm = 0
+        elif keyevent.text() in ['m', 'M']:
+            self.datamanager_obj.arm = 4
 
 
 if __name__ == '__main__':

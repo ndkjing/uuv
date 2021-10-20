@@ -58,7 +58,7 @@ class TcpServer:
         # 机械臂
         self.arm_pwm = 1500
         # 动力占比 %
-        self.speed = 40
+        self.speed = 2
 
     def wait_connect(self):
         # 等待客户连接，连接成功后，将socket对象保存到client，将细节数据等保存到addr
@@ -134,7 +134,7 @@ class TcpServerQt(QWidget):
         # 机械臂
         self.arm_pwm = 1500
         # 动力占比 %
-        self.speed = 40
+        self.speed = 2
         # 水下机器人运动方向
         self.move = 0
 
