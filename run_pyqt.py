@@ -76,6 +76,7 @@ class CameraThreadSignalBack(QThread):
     changePixmap = pyqtSignal(QImage)
     width = 300
     height = 100
+
     def __init__(self, parent=None, run_func=None):
         super().__init__(parent)
         self.run_func = run_func
@@ -366,6 +367,8 @@ class MainDialog(QMainWindow):
         self.ui.speed_radio_button.setFont(QFont('Arial', 14))
         self.ui.deep_radio_button.setFont(QFont('Arial', 14))
         self.ui.angle_radio_button.setFont(QFont('Arial', 14))
+        self.ui.open_sonar_btn.setFont(QFont('Arial', 14))
+
         # 设置按钮为按下不弹起
         self.ui.show_video_button.setCheckable(True)
         self.ui.front_camera_video.setCheckable(True)
@@ -490,9 +493,9 @@ class MainDialog(QMainWindow):
         speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value() + 1
         deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
         angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
-        self.ui.speed_slider_label.setText("油门: %s" % speed_slider_value)
-        self.ui.deep_slider_label.setText("深度: %s" % deep_slider_value)
-        self.ui.angle_slider_label.setText("角度: %s" % angle_slider_value)
+        self.ui.speed_slider_label.setText(" 油门: %s " % speed_slider_value)
+        self.ui.deep_slider_label.setText(" 深度: %s " % deep_slider_value)
+        self.ui.angle_slider_label.setText(" 角度: %s " % angle_slider_value)
         if self.ui.speed_radio_button.isChecked():
             self.datamanager_obj.speed_slider_value = speed_slider_value
         if self.ui.deep_radio_button.isChecked():
@@ -717,26 +720,26 @@ class MainDialog(QMainWindow):
     # 显示数据
     def update_base_info(self):
         if self.datamanager_obj.joystick_obj.b_connect == 1:
-            self.ui.joystick_label.setText("遥控")
+            self.ui.joystick_label.setText(" 遥控 ")
         else:
-            self.ui.joystick_label.setText("无遥控")
-        deep_str = "深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
-        press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
-        temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
+            self.ui.joystick_label.setText(" 无遥控 ")
+        deep_str = " 深度:%.02f m " % self.datamanager_obj.tcp_server_obj.deep
+        press_str = " 压力: %.02f " % self.datamanager_obj.tcp_server_obj.press
+        temperature_str = " 水温: %.02f " % self.datamanager_obj.tcp_server_obj.temperature
         if self.datamanager_obj.tcp_server_obj.is_leak_water < 1000:
-            leak_str = "未漏水(%d)"%self.datamanager_obj.tcp_server_obj.is_leak_water
+            leak_str = " 未漏水(%d) " % self.datamanager_obj.tcp_server_obj.is_leak_water
         else:
-            leak_str = "*已漏水(%d)*"%self.datamanager_obj.tcp_server_obj.is_leak_water
-        speed_str = "速度  % d %%" % (self.datamanager_obj.tcp_server_obj.speed*25)
-        light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
-        sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
-        camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
-        arm_str = "机械臂： %d" % self.datamanager_obj.tcp_server_obj.arm_pwm
+            leak_str = " *已漏水(%d)* " % self.datamanager_obj.tcp_server_obj.is_leak_water
+        speed_str = " 速度  % d %% " % (self.datamanager_obj.tcp_server_obj.speed * 25)
+        light_str = " 灯： %d " % self.datamanager_obj.tcp_server_obj.is_big_light
+        sonar_str = " 声呐： %d " % self.datamanager_obj.tcp_server_obj.is_sonar
+        camera_steer_str = " 舵机： %d " % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
+        arm_str = " 机械臂： %d " % self.datamanager_obj.tcp_server_obj.arm_pwm
         x_angle_str = "x角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[0]
         y_angle_str = "y角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[1]
         z_angle_str = "z角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[2]
         self.ui.pressure_label.setText(press_str)
-        self.ui.motor_lock_label.setText('解锁：1')
+        self.ui.motor_lock_label.setText(' 解锁：1 ')
         self.ui.temperature_label.setText(temperature_str)
         self.ui.leak_label.setText(leak_str)
         self.ui.deep_label.setText(deep_str)
@@ -750,8 +753,8 @@ class MainDialog(QMainWindow):
         # self.ui.angle_y_label.setText(y_angle_str)
         # self.ui.angle_z_label.setText(z_angle_str)
 
-        control_info_dict = {0: ' 停止', 1: ' 前进', 2: ' 后退', 3: ' 左转', 4: ' 右转', 5: ' 上升', 6: ' 下降', 7: ' 左移',
-                             8: ' 右移'}
+        control_info_dict = {0: ' 停止 ', 1: ' 前进 ', 2: ' 后退 ', 3: ' 左转 ', 4: ' 右转 ', 5: ' 上升 ', 6: ' 下降 ', 7: ' 左移 ',
+                             8: ' 右移 '}
         mode_str = control_info_dict[self.datamanager_obj.move]
         self.ui.mode_label.setText(mode_str)
 

@@ -28,7 +28,7 @@ if not os.path.exists(save_imgs_dir):
 if not os.path.exists(save_videos_dir):
     os.mkdir(save_videos_dir)
 # tcp 服务器地址和端口
-target_server_type = 1  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
+target_server_type = 2  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
 if target_server_type == 0:
     server_ip = '192.168.199.222'
 elif target_server_type == 1:
