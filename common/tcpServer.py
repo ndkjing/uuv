@@ -39,7 +39,7 @@ class TcpServer:
         self.client = None
         # 罗盘角度
         self.theta_z = 0  # z轴角度
-        self.theta_list = []  # 依次放 x,y,z 角度
+        self.theta_list = [0, 0, 0]  # 依次放 x,y,z 角度
         self.last_theta = 0
         # 深度
         self.deep = 0
@@ -135,6 +135,8 @@ class TcpServerQt(QWidget):
         self.arm_pwm = 1500
         # 动力占比 %
         self.speed = 40
+        # 水下机器人运动方向
+        self.move = 0
 
     def new_socket_slot(self):
         sock = self.server.nextPendingConnection()
@@ -149,61 +151,67 @@ class TcpServerQt(QWidget):
     def read_data_slot(self, sock):
         while sock.bytesAvailable():
             datagram = sock.read(sock.bytesAvailable())
-            message = datagram.decode()
-            print('socket receive data', message)
-            message = str(message)
-            message = message.strip()
+            try:
+                message = datagram.decode()
+                print('socket receive data', message)
+                message = str(message)
+                message = message.strip()
 
-            press_find = re.findall(r'\"pressure\":(.*?),\"', message)
-            if len(press_find) > 0:
-                self.press = float(press_find[0])
+                press_find = re.findall(r'\"pressure\":(.*?),\"', message)
+                if len(press_find) > 0:
+                    self.press = float(press_find[0])
 
-            water_find = re.findall(r'\"water\":(.*?),\"', message)
-            if len(water_find) > 0:
-                self.is_leak_water = int(water_find[0])
+                water_find = re.findall(r'\"water\":(.*?),\"', message)
+                if len(water_find) > 0:
+                    self.is_leak_water = int(water_find[0])
 
-            light_find = re.findall(r'\"light\":(.*?),\"', message)
-            if len(light_find) > 0:
-                self.is_big_light = int(light_find[0])
+                light_find = re.findall(r'\"light\":(.*?),\"', message)
+                if len(light_find) > 0:
+                    self.is_big_light = int(light_find[0])
 
-            sonar_find = re.findall(r'\"sonar\":(.*?),\"', message)
-            if len(sonar_find) > 0:
-                self.is_sonar = int(sonar_find[0])
+                sonar_find = re.findall(r'\"sonar\":(.*?),\"', message)
+                if len(sonar_find) > 0:
+                    self.is_sonar = int(sonar_find[0])
 
-            camera_find = re.findall(r'\"camera\":(.*?),\"', message)
-            if len(camera_find) > 0:
-                self.camera_angle_pwm = int(camera_find[0])
+                camera_find = re.findall(r'\"camera\":(.*?),\"', message)
+                if len(camera_find) > 0:
+                    self.camera_angle_pwm = int(camera_find[0])
 
-            arm_find = re.findall(r'\"arm\":(.*?),\"', message)
-            if len(arm_find) > 0:
-                self.arm_pwm = int(arm_find[0])
+                arm_find = re.findall(r'\"arm\":(.*?),\"', message)
+                if len(arm_find) > 0:
+                    self.arm_pwm = int(arm_find[0])
 
-            pitch_find = re.findall(r'\"pitch\":(.*?),\"', message)
-            if len(pitch_find) > 0:
-                self.theta_list[0] = float(pitch_find[0])
+                pitch_find = re.findall(r'\"pitch\":(.*?),\"', message)
+                if len(pitch_find) > 0:
+                    self.theta_list[0] = float(pitch_find[0])
 
-            roll_find = re.findall(r'\"roll\":(.*?),\"', message)
-            if len(roll_find) > 0:
-                self.theta_list[1] = float(roll_find[0])
+                roll_find = re.findall(r'\"roll\":(.*?),\"', message)
+                if len(roll_find) > 0:
+                    self.theta_list[1] = float(roll_find[0])
 
-            yaw_find = re.findall(r'\"yaw\":(.*?),\"', message)
-            if len(yaw_find) > 0:
-                self.theta_list[2] = float(yaw_find[0])
-                self.theta_z = self.theta_list[2]
+                yaw_find = re.findall(r'\"yaw\":(.*?),\"', message)
+                if len(yaw_find) > 0:
+                    self.theta_list[2] = float(yaw_find[0])
+                    self.theta_z = self.theta_list[2]
 
-            depth_find = re.findall(r'\"depth\":(.*?),\"', message)
-            if len(depth_find) > 0:
-                self.deep = float(depth_find[0])
+                depth_find = re.findall(r'\"depth\":(.*?),\"', message)
+                if len(depth_find) > 0:
+                    self.deep = float(depth_find[0])
 
-            tem_find = re.findall(r'\"tem\":(.*?),\"', message)
-            if len(tem_find) > 0:
-                self.temperature = float(tem_find[0])
+                tem_find = re.findall(r'\"tem\":(.*?),\"', message)
+                if len(tem_find) > 0:
+                    self.temperature = float(tem_find[0])
 
-            speed_find = re.findall(r'\"speed\":(.*)}', message)
-            if len(speed_find) > 0:
-                self.speed = int(speed_find[0])
-            print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_big_light,
-                  self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed)
+                speed_find = re.findall(r'\"speed\":(.*?),', message)
+                if len(speed_find) > 0:
+                    self.speed = int(speed_find[0])
+                move_find = re.findall(r'\"move\":(.*?)}', message)
+                if len(move_find) > 0:
+                    self.move = int(move_find[0])
+                print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_big_light,
+                      self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
+            except Exception as e:
+                print('tcp data error', e)
             # answer = self.get_answer(message).replace('{br}', '\n')
             # new_datagram = answer.encode()
 

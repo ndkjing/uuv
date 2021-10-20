@@ -3,7 +3,7 @@
 """
 import time
 from common import tcpServer
-from driver import joystick
+from driver import joystick_no_pygame as joystick
 import config
 import threading
 
@@ -31,7 +31,7 @@ class DataManager(object):
         # 自稳 0 非自稳 1 自稳  稳定深度和x,y,z角度
         self.is_auto = 0
         # 滑动条油门
-        self.speed_slider_value = 30
+        self.speed_slider_value = 1
         self.deep_slider_value = 0
         self.angle_slider_value = 0
         self.move = 0

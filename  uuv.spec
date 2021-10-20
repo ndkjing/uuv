@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['run_pyqt2.py'],
+a = Analysis(['run_pyqt.py'],
              pathex=['./'],
              binaries=[],
              datas=[],

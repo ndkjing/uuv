@@ -18,7 +18,7 @@ def Singleton(cls):
 class Jostick:
     def __init__(self):
         self.clock = None
-        self.count = None
+        self.count = 0
         self.b_connect = 0
         self.axes_0 = None  #
         self.axes_1 = None  #
@@ -29,7 +29,7 @@ class Jostick:
         self.arm = 0  # 机械臂打开量
         self.camera_steer = 0  # 摄像头舵机
         self.mode = 0  # 模式 0 手动 1 自稳
-        self.init_joystick()
+        # self.init_joystick()
         self.reconnect = False
 
     def init_joystick(self):

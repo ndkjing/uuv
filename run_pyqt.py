@@ -7,6 +7,7 @@ from ui import main_ui, setting_ui, angle
 from PyQt5.QtWidgets import QDialog, QMainWindow
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
 import cv2
 from PIL import ImageFont, ImageDraw, Image
@@ -56,6 +57,31 @@ class CameraThread(QThread):
 
     def run(self):
         self.run_func(self.url, self.outLabel)
+
+
+class CameraThreadSignal(QThread):
+    changePixmap = pyqtSignal(QImage)
+    width = 1350
+    height = 750
+
+    def __init__(self, parent=None, run_func=None):
+        super().__init__(parent)
+        self.run_func = run_func
+
+    def run(self):
+        self.run_func()
+
+
+class CameraThreadSignalBack(QThread):
+    changePixmap = pyqtSignal(QImage)
+    width = 300
+    height = 100
+    def __init__(self, parent=None, run_func=None):
+        super().__init__(parent)
+        self.run_func = run_func
+
+    def run(self):
+        self.run_func()
 
 
 # 检验是否包含中文字符
@@ -123,13 +149,18 @@ class MainDialog(QMainWindow):
         # 放在线程中的人物
         # 显示视频
         self.open_flag = False
-        self.front_video_work = CameraThread(url=config.front_video_src, out_label=self.ui.front_video_label,
-                                             parent=None,
-                                             run_func=self.display_video)
-
-        self.back_video_work = CameraThread(url=config.back_video_src, out_label=self.ui.back_video_label, parent=None,
-                                            run_func=self.display_video)
-
+        # self.front_video_work = CameraThread(url=config.front_video_src, out_label=self.ui.front_video_label,
+        #                                      parent=None,
+        #                                      run_func=self.display_front_video)
+        #
+        # self.back_video_work = CameraThread(url=config.back_video_src, out_label=self.ui.back_video_label, parent=None,
+        #                                     run_func=self.display_back_video)
+        self.front_video_work = CameraThreadSignal(parent=None, run_func=self.show_front_video)
+        self.front_video_work.changePixmap.connect(self.set_image)
+        self.front_video_work.start()
+        self.back_video_work = CameraThreadSignalBack(parent=None, run_func=self.show_back_video)
+        self.back_video_work.changePixmap.connect(self.set_image_back)
+        self.back_video_work.start()
         # 保存视频
         self.save_front_video_work = SaveVideoThread(front=True, save_path=None,
                                                      parent=None,
@@ -143,6 +174,135 @@ class MainDialog(QMainWindow):
         # 更新pid参数
         self.update_pid(value=None)
         self.init_base_ui()
+
+    def show_front_video(self):
+        while True:
+            cap = cv2.VideoCapture(config.front_video_src)
+            if not cap.isOpened():
+                time.sleep(1)
+                continue
+            start_time = time.time()
+            while True:
+                ret, frame = cap.read()
+                if ret:
+                    if (time.time() - start_time) > 0.1:
+                        # 绘制文字
+                        w_frame = 1350
+                        h_frame = 750
+                        for k, v in self.frame_text_dict.items():
+                            if len(v) == 3:
+                                if v[0] == 0:
+                                    w = 100
+                                elif v[0] == 1:
+                                    w = int(w_frame / 2)
+                                else:
+                                    w = w_frame - 200
+                                if v[1] == 0:
+                                    h = 100
+                                elif v[1] == 1:
+                                    h = int(h_frame / 2)
+                                else:
+                                    h = h_frame - 200
+                                # 判断是否包含中文
+                                if is_contain_chinese(v[2]):
+                                    fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径
+                                    font = ImageFont.truetype(fontpath, 40)  # 32为字体大小
+                                    img_pil = Image.fromarray(frame)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    draw.text((w, h), v[2], font=font, fill=(100, 1, 1, 1))
+                                    frame = np.array(img_pil)
+                                else:
+                                    font = cv2.FONT_HERSHEY_SIMPLEX
+                                    cv2.putText(frame, v[2], (w, h), font, 2, (0, 0, 155), 1, cv2.LINE_AA)
+                        rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        self.frame_front = rgbImage
+                        h, w, ch = rgbImage.shape
+                        bytesPerLine = ch * w
+                        convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
+                        p = convertToQtFormat.scaled(1350, 750, Qt.KeepAspectRatio)
+                        self.front_video_work.changePixmap.emit(p)
+                        start_time = time.time()
+                else:
+                    cap.release()
+                    break
+
+    def show_back_video(self):
+        while True:
+            cap = cv2.VideoCapture(config.back_video_src)
+            if not cap.isOpened():
+                time.sleep(1)
+                continue
+            start_time = time.time()
+            while True:
+                ret, frame = cap.read()
+                if ret:
+                    if (time.time() - start_time) > 0.1:
+                        # 绘制文字
+                        w_frame = 300
+                        h_frame = 100
+                        for k, v in self.frame_text_dict.items():
+                            if len(v) == 3:
+                                if v[0] == 0:
+                                    w = 100
+                                elif v[0] == 1:
+                                    w = int(w_frame / 2)
+                                else:
+                                    w = w_frame - 200
+                                if v[1] == 0:
+                                    h = 100
+                                elif v[1] == 1:
+                                    h = int(h_frame / 2)
+                                else:
+                                    h = h_frame - 200
+                                # 判断是否包含中文
+                                if is_contain_chinese(v[2]):
+                                    fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径
+                                    font = ImageFont.truetype(fontpath, 40)  # 32为字体大小
+                                    img_pil = Image.fromarray(frame)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    draw.text((w, h), v[2], font=font, fill=(100, 1, 1, 1))
+                                    frame = np.array(img_pil)
+                                else:
+                                    font = cv2.FONT_HERSHEY_SIMPLEX
+                                    cv2.putText(frame, v[2], (w, h), font, 2, (0, 0, 155), 1, cv2.LINE_AA)
+                        rgbImage = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                        self.frame_back = rgbImage
+                        h, w, ch = rgbImage.shape
+                        bytesPerLine = ch * w
+                        convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
+                        p = convertToQtFormat.scaled(400, 200, Qt.KeepAspectRatio)
+                        self.back_video_work.changePixmap.emit(p)
+                        start_time = time.time()
+                else:
+                    cap.release()
+                    break
+
+    @pyqtSlot(QImage)
+    def set_image(self, image):
+        pix_image = QPixmap.fromImage(image)
+        # piximage 转为array
+        # qimg = pix_image.toImage()
+        # temp_shape = (qimg.height(), qimg.bytesPerLine() * 8 // qimg.depth())
+        # temp_shape += (4,)
+        # ptr = qimg.bits()
+        # ptr.setsize(qimg.byteCount())
+        # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
+        # result = result[..., :3]
+        # self.frame_front = result
+        self.ui.front_video_label.setPixmap(pix_image)
+
+    @pyqtSlot(QImage)
+    def set_image_back(self, image):
+        pix_image = QPixmap.fromImage(image)
+        # qimg = pix_image.toImage()
+        # temp_shape = (qimg.height(), qimg.bytesPerLine() * 8 // qimg.depth())
+        # temp_shape += (4,)
+        # ptr = qimg.bits()
+        # ptr.setsize(qimg.byteCount())
+        # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
+        # result = result[..., :3]
+        # self.frame_back = result
+        self.ui.back_video_label.setPixmap(pix_image)
 
     # 绘制角度
     def paint_angle(self):
@@ -171,7 +331,7 @@ class MainDialog(QMainWindow):
         :return:
         """
         # 滑动条最大值在左边，所以这样设置
-        self.ui.speed_slider.setValue(self.ui.speed_slider.maximum() - 30)
+        self.ui.speed_slider.setValue(self.ui.speed_slider.maximum() - self.datamanager_obj.speed_slider_value)
         self.ui.deep_slider.setValue(self.ui.deep_slider.maximum())
         self.ui.angle_slider.setValue(self.ui.angle_slider.maximum())
         # 设置字体大小
@@ -263,11 +423,24 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.fva_button.clicked.connect(self.update_video_address)
         self.setting_dlg.ui.bva_button.clicked.connect(self.update_video_address)
         self.ui.show_video_button.clicked.connect(self.start_video)
+        # 打开声呐
+        self.ui.open_sonar_btn.clicked.connect(self.open_sonar)
+
+    def open_sonar(self):
+        command_sonar1 = "F:\\apps\pingviewer_release\deploy\pingviewer.exe"
+        command_sonar2 = "D:\\apps\pingviewer_release\deploy\pingviewer.exe"
+        command_sonar3 = "F:\pingviewer_release\deploy\pingviewer.exe"
+        if os.path.exists(command_sonar1):
+            r_v = os.system(command_sonar1)
+        if os.path.exists(command_sonar2):
+            r_v = os.system(command_sonar2)
+        if os.path.exists(command_sonar3):
+            r_v = os.system(command_sonar3)
 
     def start_video(self):
         print('start video')
         self.front_video_work.start()
-        self.back_video_work.start()
+        # self.back_video_work.start()
 
     def update_video_address(self):
         if self.sender() == self.setting_dlg.ui.fva_button:
@@ -275,9 +448,11 @@ class MainDialog(QMainWindow):
             if self.setting_dlg.ui.fva_line_edit.text() != config.front_video_src:
                 print('update fva')
                 self.front_video_work.url = self.setting_dlg.ui.fva_line_edit.text()
+                config.front_video_src = self.setting_dlg.ui.fva_line_edit.text()
         if self.sender() == self.setting_dlg.ui.bva_button:
             print('bva_line_edit', self.setting_dlg.ui.bva_line_edit.text())
             if self.setting_dlg.ui.bva_line_edit.text() != config.back_video_src:
+                config.back_video_src = self.setting_dlg.ui.bva_line_edit.text()
                 print('update bva')
 
     # 更新视频文字水印
@@ -308,7 +483,7 @@ class MainDialog(QMainWindow):
                 self.frame_text_dict['text3'] = []
 
     def update_slider(self):
-        speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value()
+        speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value() + 1
         deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
         angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
         self.ui.speed_slider_label.setText("油门: %s" % speed_slider_value)
@@ -320,8 +495,10 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.deep_slider_value = deep_slider_value
         if self.ui.angle_radio_button.isChecked():
             self.datamanager_obj.angle_slider_value = angle_slider_value
+        # print('min max value', self.ui.speed_slider.maximum(), self.ui.speed_slider.minimum(),
+        #       self.ui.speed_slider.value())
 
-    # 跟新pid参数
+    # 更新pid参数
     def update_pid(self, value):
         sender = self.sender()
         update = True
@@ -344,8 +521,8 @@ class MainDialog(QMainWindow):
             self.setting_dlg.ui.v_d_label.setText('v_d:' + str(value / 10.0))
             self.datamanager_obj.pid_v[0] = float(value / 10.0)
         else:
-            if not self.datamanager_obj.joystick_obj.b_connect:
-                self.datamanager_obj.joystick_obj.init_joystick()
+            # if not self.datamanager_obj.joystick_obj.b_connect:
+            #     self.datamanager_obj.joystick_obj.init_joystick()
             update = False
             data = save_data.get_data(config.save_pid_path)
             if data:
@@ -397,8 +574,79 @@ class MainDialog(QMainWindow):
         # TODO
         print('close_joystick')
 
-    def display_video(self, url, label):
-        """显示视频"""
+    def display_front_video(self, url, label):
+        """显示前置摄像头视频"""
+        while True:
+            if not self.ui.show_video_button.isChecked():
+                time.sleep(1)
+                continue
+            else:
+                break
+        while True:
+            print('url', url)
+            cap = cv2.VideoCapture(url)
+            print('cap info', cap, cap.isOpened())
+            start_time = time.time()
+            while cap.isOpened():
+                success, frame = cap.read()
+                # print(time.time(), success, type(frame))
+                if success:
+                    if (time.time() - start_time) > 0.1:
+                        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                        # 绘制文字
+                        for k, v in self.frame_text_dict.items():
+                            if len(v) == 3:
+                                if v[0] == 0:
+                                    w = 100
+                                elif v[0] == 1:
+                                    w = int(frame.shape[1] / 2)
+                                else:
+                                    w = frame.shape[1] - 200
+                                if v[1] == 0:
+                                    h = 100
+                                elif v[1] == 1:
+                                    h = int(frame.shape[0] / 2)
+                                else:
+                                    h = frame.shape[0] - 200
+                                # 判断是否包含中文
+                                if is_contain_chinese(v[2]):
+                                    fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径
+                                    font = ImageFont.truetype(fontpath, 40)  # 32为字体大小
+                                    img_pil = Image.fromarray(frame)
+                                    draw = ImageDraw.Draw(img_pil)
+                                    draw.text((w, h), v[2], font=font, fill=(100, 1, 1, 1))
+                                    frame = np.array(img_pil)
+                                else:
+                                    font = cv2.FONT_HERSHEY_SIMPLEX
+                                    cv2.putText(frame, v[2], (w, h), font, 2, (0, 0, 155), 1, cv2.LINE_AA)
+                        self.frame_front = frame
+                        frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
+                        # print(time.time(), 'front width height', self.ui.front_video_label.width(),
+                        #       self.ui.front_video_label.height())
+                        frame = cv2.resize(frame,
+                                           (self.ui.front_video_label.width(), self.ui.front_video_label.height()),
+                                           interpolation=cv2.INTER_AREA)
+                        img = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+                        pix_img = QPixmap.fromImage(img)
+                        # print(time.time())
+                        label.setPixmap(pix_img)
+                        cv2.waitKey(1)
+                        # try:
+                        #     label.setPixmap()
+                        # except Exception as e:
+                        #     print('set video error', e)
+                        # self.update()
+                        start_time = time.time()
+                    else:
+                        time.sleep(0.03)
+                        # cv2.waitKey(40)
+                else:
+                    break
+            print('cap cloase')
+            cap.release()
+
+    def display_back_video(self, url, label):
+        """显示后置摄像头视频视频"""
         while True:
             if not self.ui.show_video_button.isChecked():
                 time.sleep(1)
@@ -406,6 +654,7 @@ class MainDialog(QMainWindow):
             else:
                 break
         cap = cv2.VideoCapture(url)
+        print('url', url)
         start_time = time.time()
         print(cap, cap.isOpened())
         while cap.isOpened():
@@ -414,7 +663,6 @@ class MainDialog(QMainWindow):
                 if (time.time() - start_time) > 0.1:
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
                     # 绘制文字
-                    font = cv2.FONT_HERSHEY_SIMPLEX
                     for k, v in self.frame_text_dict.items():
                         if len(v) == 3:
                             if v[0] == 0:
@@ -440,19 +688,18 @@ class MainDialog(QMainWindow):
                             else:
                                 font = cv2.FONT_HERSHEY_SIMPLEX
                                 cv2.putText(frame, v[2], (w, h), font, 2, (200, 255, 155), 1, cv2.LINE_AA)
-                    if url == config.front_video_src:
-                        self.frame_front = frame
-                        # frame = cv2.resize(frame, (640, 480), interpolation=cv2.INTER_AREA)
-                        frame = cv2.resize(frame,
-                                           (self.ui.front_video_label.width(), self.ui.front_video_label.height()),
-                                           interpolation=cv2.INTER_AREA)
-                    else:
-                        self.frame_back = frame
-                        frame = cv2.resize(frame, (self.ui.back_video_label.width(), self.ui.back_video_label.height()),
-                                           interpolation=cv2.INTER_AREA)
+                    print(time.time(), 'back width height', self.ui.front_video_label.width(),
+                          self.ui.front_video_label.height())
+                    self.frame_back = frame
+                    frame = cv2.resize(frame, (self.ui.back_video_label.width(), self.ui.back_video_label.height()),
+                                       interpolation=cv2.INTER_AREA)
                     img = QImage(frame.data, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
-                    label.setPixmap(QPixmap.fromImage(img))
-                    cv2.waitKey(1)
+                    try:
+                        label.setPixmap(QPixmap.fromImage(img))
+                    except Exception as e:
+                        print('set video error', e)
+                    # cv2.waitKey(1)
+                    self.update()
                     start_time = time.time()
 
     # 发送数据
@@ -460,7 +707,8 @@ class MainDialog(QMainWindow):
         if self.datamanager_obj.tcp_server_obj.b_connect:
             self.datamanager_obj.send_tcp_data(b_once=True)
         # 测试显示数据
-        # print('front_video_label',self.ui.front_video_label.size())
+        # print('front_video_label', self.ui.front_video_label.size())
+        # print('back_video_label', self.ui.back_video_label.size())
 
     # 显示数据
     def update_base_info(self):
@@ -471,8 +719,11 @@ class MainDialog(QMainWindow):
         deep_str = "深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
         press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
         temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
-        leak_str = "未漏水 %d" % self.datamanager_obj.tcp_server_obj.is_leak_water
-        speed_str = "速度 %% %d" % self.datamanager_obj.tcp_server_obj.speed
+        if self.datamanager_obj.tcp_server_obj.is_leak_water < 1000:
+            leak_str = "未漏水"
+        else:
+            leak_str = "*已漏水*"
+        speed_str = "速度  % d %%" % self.datamanager_obj.tcp_server_obj.speed
         light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
         sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
         camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
@@ -481,6 +732,7 @@ class MainDialog(QMainWindow):
         y_angle_str = "y角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[1]
         z_angle_str = "z角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[2]
         self.ui.pressure_label.setText(press_str)
+        self.ui.motor_lock_label.setText('解锁：1')
         self.ui.temperature_label.setText(temperature_str)
         self.ui.leak_label.setText(leak_str)
         self.ui.deep_label.setText(deep_str)
@@ -514,9 +766,9 @@ class MainDialog(QMainWindow):
                 save_path = os.path.join(config.save_imgs_dir, str_time + 'back_.jpg')
         else:
             if b_front:
-                save_path = os.path.join(config.save_imgs_dir, str_time + 'front_.avi')
+                save_path = os.path.join(config.save_videos_dir, str_time + 'front_.avi')
             else:
-                save_path = os.path.join(config.save_imgs_dir, str_time + 'back_.avi')
+                save_path = os.path.join(config.save_videos_dir, str_time + 'back_.avi')
         return save_path
 
     # 前摄截图提示
@@ -640,6 +892,7 @@ class MainDialog(QMainWindow):
                 while self.is_write_frame_front:
                     write_frame = copy.deepcopy(self.frame_front)
                     write_frame = cv2.resize(write_frame, (1920, 1080))
+                    # 转为bgr  修改为已经是bgr不在转换
                     rgb_write_frame = write_frame[..., ::-1]
                     out.write(rgb_write_frame)
                     # print(time.time(), 'write frame', write_frame.shape)
