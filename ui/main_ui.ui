@@ -381,7 +381,7 @@
              <item>
               <widget class="QLabel" name="back_video_label">
                <property name="text">
-                <string>后摄</string>
+                <string/>
                </property>
               </widget>
              </item>
@@ -433,14 +433,14 @@
                 <item>
                  <widget class="QLabel" name="angle_y_label">
                   <property name="text">
-                   <string>横滚</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="angle_z_label">
                   <property name="text">
-                   <string>偏航</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -691,7 +691,7 @@
           <item>
            <widget class="QLabel" name="front_video_label">
             <property name="text">
-             <string>前摄</string>
+             <string/>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>

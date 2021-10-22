@@ -43,6 +43,16 @@ class JpystickThread(QThread):
         self.run_func()
 
 
+class SonarThread(QThread):
+    def __init__(self, parent=None, run_func=None, run_path=None):
+        super().__init__(parent)
+        self.run_path = run_path
+        self.run_func = run_func
+
+    def run(self):
+        os.system(self.run_path)
+
+
 class CameraThread(QThread):
     """
     摄像头对象
@@ -76,6 +86,7 @@ class CameraThreadSignalBack(QThread):
     changePixmap = pyqtSignal(QImage)
     width = 300
     height = 100
+
     def __init__(self, parent=None, run_func=None):
         super().__init__(parent)
         self.run_func = run_func
@@ -123,7 +134,7 @@ class MainDialog(QMainWindow):
         self.timer1.timeout.connect(self.update)
         self.timer1.timeout.connect(self.paint_angle)  # 更新角度
         self.timer1.start(1000)  # 每1s 更新一次
-
+        self.sonar_obj = SonarThread(parent=None, run_func=self.open_sonar)
         # 写入视频
         self.is_write_frame_front = False  # 当前写入视频标志位
         self.write_frame_front_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
@@ -219,7 +230,11 @@ class MainDialog(QMainWindow):
                         h, w, ch = rgbImage.shape
                         bytesPerLine = ch * w
                         convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
-                        p = convertToQtFormat.scaled(1350, 750, Qt.KeepAspectRatio)
+                        # p = convertToQtFormat.scaled(1350, 750, Qt.KeepAspectRatio)
+                        p = convertToQtFormat.scaled(self.ui.front_video_label.width(),
+                                                     self.ui.front_video_label.height(), Qt.KeepAspectRatio)
+                        # print('front_video_label', self.ui.front_video_label.size())
+                        # print('back_video_label', self.ui.back_video_label.size())
                         self.front_video_work.changePixmap.emit(p)
                         start_time = time.time()
                 else:
@@ -270,7 +285,9 @@ class MainDialog(QMainWindow):
                         h, w, ch = rgbImage.shape
                         bytesPerLine = ch * w
                         convertToQtFormat = QtGui.QImage(rgbImage.data, w, h, bytesPerLine, QtGui.QImage.Format_RGB888)
-                        p = convertToQtFormat.scaled(400, 200, Qt.KeepAspectRatio)
+                        # p = convertToQtFormat.scaled(400, 200, Qt.KeepAspectRatio)
+                        p = convertToQtFormat.scaled(self.ui.back_video_label.width(), self.ui.back_video_label.width(),
+                                                     Qt.KeepAspectRatio)
                         self.back_video_work.changePixmap.emit(p)
                         start_time = time.time()
                 else:
@@ -279,11 +296,8 @@ class MainDialog(QMainWindow):
 
     @pyqtSlot(QImage)
     def set_image(self, image):
-        print('start time',)
-        time1 =time.time()
+        time1 = time.time()
         pix_image = QPixmap.fromImage(image)
-        time2=time.time()
-        print("change pix time",time2-time1)
         # piximage 转为array
         # qimg = pix_image.toImage()
         # temp_shape = (qimg.height(), qimg.bytesPerLine() * 8 // qimg.depth())
@@ -293,9 +307,8 @@ class MainDialog(QMainWindow):
         # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
         # result = result[..., :3]
         # self.frame_front = result
-        time3= time.time()
+        time3 = time.time()
         self.ui.front_video_label.setPixmap(pix_image)
-        print("set label time", time3 - time2)
 
     @pyqtSlot(QImage)
     def set_image_back(self, image):
@@ -341,6 +354,8 @@ class MainDialog(QMainWindow):
         self.ui.deep_slider.setValue(self.ui.deep_slider.maximum())
         self.ui.angle_slider.setValue(self.ui.angle_slider.maximum())
         # 设置字体大小
+        self.ui.back_label.setFont(QFont('Arial', 16))
+        self.ui.front_label.setFont(QFont('Arial', 16))
         self.ui.logo_label.setFont(QFont('Arial', 16))
         self.ui.pressure_label.setFont(QFont('Arial', 14))
         self.ui.speed_label.setFont(QFont('Arial', 14))
@@ -364,6 +379,7 @@ class MainDialog(QMainWindow):
         self.ui.show_video_button.setFont(QFont('Arial', 14))
         self.ui.switch_video_button.setFont(QFont('Arial', 14))
         self.ui.init_motor_btn.setFont(QFont('Arial', 14))
+        self.ui.open_sonar_btn.setFont(QFont('Arial', 14))
         self.ui.setting_btn.setFont(QFont('Arial', 14))
         self.ui.slider_label.setFont(QFont('Arial', 16))
         self.ui.speed_slider_label.setFont(QFont('Arial', 14))
@@ -379,6 +395,8 @@ class MainDialog(QMainWindow):
         # 设置当前显示视频地址
         self.setting_dlg.ui.fva_line_edit.setText(config.front_video_src)
         self.setting_dlg.ui.bva_line_edit.setText(config.back_video_src)
+        # 设置按钮背景图片
+        # self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(ui/切换.png)}")
 
     # 初始化背景图片
     def init_image(self):
@@ -434,18 +452,30 @@ class MainDialog(QMainWindow):
 
     # 打开声呐
     def open_sonar(self):
+        if self.datamanager_obj.sonar:
+            self.datamanager_obj.sonar = 0
+        else:
+            self.datamanager_obj.sonar = 1
+        # import subprocess
         command_sonar1 = "F:\\apps\pingviewer_release\deploy\pingviewer.exe"
         command_sonar2 = "D:\\apps\pingviewer_release\deploy\pingviewer.exe"
         command_sonar3 = "F:\pingviewer_release\deploy\pingviewer.exe"
         command_sonar4 = "D:\pingviewer_release\deploy\pingviewer.exe"
         if os.path.exists(command_sonar1):
-            r_v = os.system(command_sonar1)
+            self.sonar_obj.run_path = command_sonar1
+            self.sonar_obj.start()
+            # rc, out = subprocess.getstatusoutput(command_sonar1)
         elif os.path.exists(command_sonar2):
-            r_v = os.system(command_sonar2)
+            self.sonar_obj.run_path = command_sonar2
+            self.sonar_obj.start()
         elif os.path.exists(command_sonar3):
-            r_v = os.system(command_sonar3)
+            self.sonar_obj.run_path = command_sonar3
+            self.sonar_obj.start()
         elif os.path.exists(command_sonar4):
-            r_v = os.system(command_sonar4)
+            self.sonar_obj.run_path = command_sonar4
+            self.sonar_obj.start()
+            # subprocess.getstatusoutput(command_sonar4)
+            # r_v = os.system(command_sonar4)
 
     def start_video(self):
         print('start video')
@@ -496,9 +526,9 @@ class MainDialog(QMainWindow):
         speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value() + 1
         deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
         angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
-        self.ui.speed_slider_label.setText("油门: %s" % speed_slider_value)
-        self.ui.deep_slider_label.setText("深度: %s" % deep_slider_value)
-        self.ui.angle_slider_label.setText("角度: %s" % angle_slider_value)
+        self.ui.speed_slider_label.setText(" 油门: %s " % speed_slider_value)
+        self.ui.deep_slider_label.setText(" 深度: %s " % deep_slider_value)
+        self.ui.angle_slider_label.setText(" 角度: %s " % angle_slider_value)
         if self.ui.speed_radio_button.isChecked():
             self.datamanager_obj.speed_slider_value = speed_slider_value
         if self.ui.deep_radio_button.isChecked():
@@ -723,26 +753,42 @@ class MainDialog(QMainWindow):
     # 显示数据
     def update_base_info(self):
         if self.datamanager_obj.joystick_obj.b_connect == 1:
-            self.ui.joystick_label.setText("遥控")
+            self.ui.joystick_label.setText(" 遥控 ")
         else:
-            self.ui.joystick_label.setText("无遥控")
-        deep_str = "深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
-        press_str = "压力: %.02f" % self.datamanager_obj.tcp_server_obj.press
-        temperature_str = "水温: %.02f" % self.datamanager_obj.tcp_server_obj.temperature
+            self.ui.joystick_label.setText(" 无遥控 ")
+        deep_str = " 深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
+        press_str = " 压力: %.02f " % self.datamanager_obj.tcp_server_obj.press
+        temperature_str = " 水温: %.02f " % self.datamanager_obj.tcp_server_obj.temperature
         if self.datamanager_obj.tcp_server_obj.is_leak_water < 1000:
-            leak_str = "未漏水(%d)"%self.datamanager_obj.tcp_server_obj.is_leak_water
+            leak_str = " 未漏水(%d) " % self.datamanager_obj.tcp_server_obj.is_leak_water
         else:
-            leak_str = "*已漏水(%d)*"%self.datamanager_obj.tcp_server_obj.is_leak_water
-        speed_str = "速度  % d %%" % (self.datamanager_obj.tcp_server_obj.speed*25)
-        light_str = "灯： %d" % self.datamanager_obj.tcp_server_obj.is_big_light
-        sonar_str = "声呐： %d" % self.datamanager_obj.tcp_server_obj.is_sonar
-        camera_steer_str = "舵机： %d" % self.datamanager_obj.tcp_server_obj.camera_angle_pwm
-        arm_str = "机械臂： %d" % self.datamanager_obj.tcp_server_obj.arm_pwm
-        x_angle_str = "x角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[0]
-        y_angle_str = "y角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[1]
-        z_angle_str = "z角度： %d" % self.datamanager_obj.tcp_server_obj.theta_list[2]
+            leak_str = " *已漏水(%d)* " % self.datamanager_obj.tcp_server_obj.is_leak_water
+        speed_str = " 速度  % d %% " % (self.datamanager_obj.tcp_server_obj.speed * 25)
+        if self.datamanager_obj.tcp_server_obj.is_big_light:
+            light_str = " 灯： 开 "
+        else:
+            light_str = " 灯： 关 "
+        if self.datamanager_obj.tcp_server_obj.is_sonar:
+            sonar_str = " 声呐： 开 "
+        else:
+            sonar_str = " 声呐： 关 "
+        if self.datamanager_obj.tcp_server_obj.camera_angle_pwm == 0:
+            camera_steer_str = " 舵机： 停止 "
+        elif self.datamanager_obj.tcp_server_obj.camera_angle_pwm == 2:
+            camera_steer_str = " 舵机： 上仰 "
+        else:
+            camera_steer_str = " 舵机： 下俯 "
+        if self.datamanager_obj.tcp_server_obj.arm_pwm == 0:
+            arm_str = " 机械臂： 停止 "
+        elif self.datamanager_obj.tcp_server_obj.arm_pwm == 1:
+            arm_str = " 机械臂： 打开 "
+        else:
+            arm_str = " 机械臂： 关闭 "
+        x_angle_str = " x角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[0]
+        y_angle_str = " y角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[1]
+        z_angle_str = " z角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[2]
         self.ui.pressure_label.setText(press_str)
-        self.ui.motor_lock_label.setText('解锁：1')
+        self.ui.motor_lock_label.setText(' 解锁：1 ')
         self.ui.temperature_label.setText(temperature_str)
         self.ui.leak_label.setText(leak_str)
         self.ui.deep_label.setText(deep_str)
@@ -922,7 +968,7 @@ class MainDialog(QMainWindow):
                     write_frame = cv2.resize(write_frame, (1920, 1080))
                     rgb_write_frame = write_frame[..., ::-1]
                     out.write(rgb_write_frame)
-                    print(time.time(), 'write frame', write_frame.shape)
+                    # print(time.time(), 'write frame', write_frame.shape)
                     time.sleep(0.1)
                 out.release()
             else:
