@@ -279,7 +279,11 @@ class MainDialog(QMainWindow):
 
     @pyqtSlot(QImage)
     def set_image(self, image):
+        print('start time',)
+        time1 =time.time()
         pix_image = QPixmap.fromImage(image)
+        time2=time.time()
+        print("change pix time",time2-time1)
         # piximage 转为array
         # qimg = pix_image.toImage()
         # temp_shape = (qimg.height(), qimg.bytesPerLine() * 8 // qimg.depth())
@@ -289,7 +293,9 @@ class MainDialog(QMainWindow):
         # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
         # result = result[..., :3]
         # self.frame_front = result
+        time3= time.time()
         self.ui.front_video_label.setPixmap(pix_image)
+        print("set label time", time3 - time2)
 
     @pyqtSlot(QImage)
     def set_image_back(self, image):

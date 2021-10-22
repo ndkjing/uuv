@@ -264,6 +264,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_3.setSpacing(0)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.front_video_label = QtWidgets.QLabel(self.groupBox_2)
+        self.front_video_label.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
         self.front_video_label.setObjectName("front_video_label")
         self.horizontalLayout_3.addWidget(self.front_video_label)
         self.horizontalLayout.addWidget(self.groupBox_2)
