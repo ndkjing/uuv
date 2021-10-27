@@ -106,17 +106,18 @@ class DataManager(object):
             mode_info = 'mode%sz' % (self.is_auto)
             backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             send_data_method = 1
-            send_data_list.append(move_info)
-            send_data_list.append(speed_info)
-            send_data_list.append(camera_info)
-            send_data_list.append(light_info)
             send_data_list.append(sonar_info)
             send_data_list.append(arm_info)
-            send_data_list.append(pid_info)
+            send_data_list.append(light_info)
+            send_data_list.append(camera_info)
+            send_data_list.append(speed_info)
+            send_data_list.append(move_info)
+            # send_data_list.append(pid_info)
             send_data_list.append(mode_info)
             try:
                 if send_data_method == 1:
                     for data in send_data_list:
+                        print('send data', data)
                         self.tcp_server_obj.write_data(data)
                         time.sleep(0.01)
                 else:
