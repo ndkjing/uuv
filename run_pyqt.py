@@ -169,6 +169,7 @@ class MainDialog(QMainWindow):
         self.front_video_work = CameraThreadSignal(parent=None, run_func=self.show_front_video)
         self.front_video_work.changePixmap.connect(self.set_image)
         self.front_video_work.start()
+        time.sleep(0.02)
         self.back_video_work = CameraThreadSignalBack(parent=None, run_func=self.show_back_video)
         self.back_video_work.changePixmap.connect(self.set_image_back)
         self.back_video_work.start()
