@@ -49,8 +49,10 @@ class TcpServer:
         self.press = 0
         # 是否漏水
         self.is_leak_water = 0
-        # 灯
-        self.is_big_light = 0
+        # 大灯
+        self.is_head_light = 0
+        # led灯
+        self.is_led_light = 0
         # 声呐
         self.is_sonar = 0
         # 摄像头角度
@@ -125,8 +127,10 @@ class TcpServerQt(QWidget):
         self.press = 0
         # 是否漏水
         self.is_leak_water = 0
-        # 灯
-        self.is_big_light = 0
+        # 大灯
+        self.is_headlight = 0
+        # led灯
+        self.is_ledlight = 0
         # 声呐
         self.is_sonar = 0
         # 摄像头角度
@@ -167,7 +171,7 @@ class TcpServerQt(QWidget):
 
                 light_find = re.findall(r'\"light\":(.*?),\"', message)
                 if len(light_find) > 0:
-                    self.is_big_light = int(light_find[0])
+                    self.is_headlight = int(light_find[0])
 
                 sonar_find = re.findall(r'\"sonar\":(.*?),\"', message)
                 if len(sonar_find) > 0:
@@ -208,7 +212,7 @@ class TcpServerQt(QWidget):
                 move_find = re.findall(r'\"move\":(.*?)}', message)
                 if len(move_find) > 0:
                     self.move = int(move_find[0])
-                print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_big_light,
+                print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_headlight,
                       self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
             except Exception as e:
                 print('tcp data error', e)

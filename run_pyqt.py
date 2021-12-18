@@ -9,20 +9,18 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import *
+import PyQt5
 import cv2
 from PIL import ImageFont, ImageDraw, Image
 from qt_material import apply_stylesheet
-# from vtk import *
-# from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 import numpy as np
-# from stl import mesh
-# import pyqtgraph.opengl as gl
 import math
 
 from dataManager import data_manager
 from common import draw_angle
 import config
 from storage import save_data
+import resources
 
 
 class SettingWindow(QDialog):
@@ -122,10 +120,19 @@ class SaveVideoThread(QThread):
 class MainDialog(QMainWindow):
     def __init__(self, parent=None):
         super(QMainWindow, self).__init__(parent)
+
+        # self.isPressed = False
+        # # 背景透明
+        # self.setAttribute(Qt.WA_TranslucentBackground, True)
+        # # 无边框
+        # self.setWindowFlags(Qt.FramelessWindowHint)  # 隐藏边框
+        # # 鼠标跟踪
+        # self.setMouseTracking(True)
+
         self.ui = main_ui.Ui_MainWindow()
         self.ui.setupUi(self)
         self.datamanager_obj = data_manager.DataManager()
-        self.draw_angle_obj = draw_angle.DrawAngle(20, 200)
+        self.draw_angle_obj = draw_angle.DrawAngle(20, 225)
         self.timer = QTimer()
         self.timer.timeout.connect(self.send_data)
         self.timer.timeout.connect(self.update_base_info)
@@ -140,14 +147,6 @@ class MainDialog(QMainWindow):
         self.write_frame_front_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
         self.is_write_frame_back = False  # 当前写入视频标志位
         self.write_frame_back_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
-        # 显示三维模型
-        # self.currentSTL = None
-        # self.lastDir = None
-        # self.droppedFilename = None
-        # self.viewer = gl.GLViewWidget()
-        # self.ui.view_layout.addWidget(self.viewer, 1)
-        # self.show_view()
-
         # 设置页面
         self.setting_dlg = SettingWindow()
         # 绑定修改数据
@@ -299,6 +298,7 @@ class MainDialog(QMainWindow):
     def set_image(self, image):
         time1 = time.time()
         pix_image = QPixmap.fromImage(image)
+        time2 = time.time()
         # piximage 转为array
         # qimg = pix_image.toImage()
         # temp_shape = (qimg.height(), qimg.bytesPerLine() * 8 // qimg.depth())
@@ -308,8 +308,10 @@ class MainDialog(QMainWindow):
         # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
         # result = result[..., :3]
         # self.frame_front = result
-        time3 = time.time()
+        # print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
         self.ui.front_video_label.setPixmap(pix_image)
+        time3 = time.time()
+        # print("change time",time3-time2,"show_time",time2-time1)
 
     @pyqtSlot(QImage)
     def set_image_back(self, image):
@@ -351,57 +353,127 @@ class MainDialog(QMainWindow):
         :return:
         """
         # 滑动条最大值在左边，所以这样设置
-        self.ui.speed_slider.setValue(self.ui.speed_slider.maximum() - self.datamanager_obj.speed_slider_value)
-        self.ui.deep_slider.setValue(self.ui.deep_slider.maximum())
-        self.ui.angle_slider.setValue(self.ui.angle_slider.maximum())
         # 设置字体大小
         self.ui.back_label.setFont(QFont('Arial', 16))
         self.ui.front_label.setFont(QFont('Arial', 16))
         self.ui.logo_label.setFont(QFont('Arial', 16))
-        self.ui.pressure_label.setFont(QFont('Arial', 14))
-        self.ui.speed_label.setFont(QFont('Arial', 14))
-        self.ui.motor_lock_label.setFont(QFont('Arial', 14))
-        self.ui.leak_label.setFont(QFont('Arial', 14))
-        self.ui.light_label.setFont(QFont('Arial', 14))
-        self.ui.sonar_label.setFont(QFont('Arial', 14))
-        self.ui.camera_steer_label.setFont(QFont('Arial', 14))
-        self.ui.arm_label.setFont(QFont('Arial', 14))
-
-        self.ui.front_video_label.setFont(QFont('Arial', 14))
-        self.ui.front_camera_cap.setFont(QFont('Arial', 14))
-        self.ui.front_camera_video.setFont(QFont('Arial', 14))
-        self.ui.back_video_label.setFont(QFont('Arial', 14))
-        self.ui.back_camera_cap.setFont(QFont('Arial', 14))
-        self.ui.back_camera_video.setFont(QFont('Arial', 14))
-        self.ui.mode_label.setFont(QFont('Arial', 14))
-        self.ui.joystick_label.setFont(QFont('Arial', 14))
-        self.ui.deep_label.setFont(QFont('Arial', 14))
-        self.ui.temperature_label.setFont(QFont('Arial', 14))
-        self.ui.show_video_button.setFont(QFont('Arial', 14))
-        self.ui.switch_video_button.setFont(QFont('Arial', 14))
-        self.ui.init_motor_btn.setFont(QFont('Arial', 14))
-        self.ui.open_sonar_btn.setFont(QFont('Arial', 14))
-        self.ui.setting_btn.setFont(QFont('Arial', 14))
-        self.ui.slider_label.setFont(QFont('Arial', 16))
-        self.ui.speed_slider_label.setFont(QFont('Arial', 14))
-        self.ui.deep_slider_label.setFont(QFont('Arial', 14))
-        self.ui.angle_slider_label.setFont(QFont('Arial', 14))
-        self.ui.speed_radio_button.setFont(QFont('Arial', 14))
-        self.ui.deep_radio_button.setFont(QFont('Arial', 14))
-        self.ui.angle_radio_button.setFont(QFont('Arial', 14))
+        self.ui.leak_label.setFont(QFont('Arial', 16))
+        self.ui.arm_label.setFont(QFont('Arial', 16))
+        self.ui.front_video_label.setFont(QFont('Arial', 16))
+        self.ui.front_camera_cap.setFont(QFont('Arial', 16))
+        self.ui.front_camera_video.setFont(QFont('Arial', 16))
+        self.ui.back_video_label.setFont(QFont('Arial', 16))
+        self.ui.back_camera_cap.setFont(QFont('Arial', 16))
+        self.ui.back_camera_video.setFont(QFont('Arial', 16))
+        self.ui.mode_label.setFont(QFont('Arial', 16))
+        self.ui.deep_label.setFont(QFont('Arial', 16))
+        self.ui.temperature_label.setFont(QFont('Arial', 16))
+        self.ui.switch_video_button.setFont(QFont('Arial', 16))
+        # self.ui.open_sonar_btn.setFont(QFont('Arial', 16))
+        self.ui.setting_btn.setFont(QFont('Arial', 16))
+        self.ui.headlight_label.setFont(QFont('Arial', 16))
+        self.ui.led_label.setFont(QFont('Arial', 16))
+        self.ui.steer_label.setFont(QFont('Arial', 16))
+        self.ui.press_label.setFont(QFont('Arial', 16))
+        self.ui.speed_label.setFont(QFont('Arial', 16))
+        self.ui.robot_text_label.setFont(QFont('Arial', 16))
+        self.ui.joystick_text_label.setFont(QFont('Arial', 16))
+        self.ui.auto_label.setFont(QFont('Arial', 16))
+        self.ui.auto_deep_label.setFont(QFont('Arial', 16))
+        self.ui.auto_direction_label.setFont(QFont('Arial', 16))
+        self.ui.keep_deep_btn.setFont(QFont('Arial', 16))
+        self.ui.keep_direction_btn.setFont(QFont('Arial', 16))
+        self.ui.move_deep_btn.setFont(QFont('Arial', 16))
+        self.ui.move_direction_btn.setFont(QFont('Arial', 16))
+        self.ui.v_label.setFont(QFont('Arial', 16))
+        self.ui.sonar_text_label.setFont(QFont('Arial', 16))
+        self.ui.direct_x_label.setFont(QFont('Arial', 16))
+        self.ui.direct_y_label.setFont(QFont('Arial', 16))
+        self.ui.direct_z_label.setFont(QFont('Arial', 16))
         # 设置按钮为按下不弹起
-        self.ui.show_video_button.setCheckable(True)
         self.ui.front_camera_video.setCheckable(True)
         self.ui.back_camera_video.setCheckable(True)
         # 设置当前显示视频地址
         self.setting_dlg.ui.fva_line_edit.setText(config.front_video_src)
         self.setting_dlg.ui.bva_line_edit.setText(config.back_video_src)
-        # 设置按钮背景图片
-        # self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(ui/切换.png)}")
+        # 摄像头图标设置
+        self.ui.front_camera_cap.setText('')
+        self.ui.front_camera_cap.setFixedWidth(32)
+        self.ui.front_camera_cap.setFixedHeight(32)
+        self.ui.front_camera_cap.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/拍照.png)}")
+        self.ui.front_camera_video.setText('')
+        self.ui.front_camera_video.setFixedWidth(32)
+        self.ui.front_camera_video.setFixedHeight(32)
+        self.ui.front_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
+        self.ui.back_camera_cap.setText('')
+        self.ui.back_camera_cap.setFixedWidth(32)
+        self.ui.back_camera_cap.setFixedHeight(32)
+        self.ui.back_camera_cap.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/拍照.png)}")
+        self.ui.back_camera_video.setText('')
+        self.ui.back_camera_video.setFixedWidth(32)
+        self.ui.back_camera_video.setFixedHeight(32)
+        self.ui.back_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
+        # 设置背景图片
+        self.ui.robot_img_btn.setFixedWidth(22)
+        self.ui.robot_img_btn.setFixedHeight(22)
+        self.ui.robot_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
+        self.ui.joystick_img_btn.setFixedWidth(22)
+        self.ui.joystick_img_btn.setFixedHeight(22)
+        self.ui.joystick_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
+        self.ui.headlight_img_btn.setFixedWidth(22)
+        self.ui.headlight_img_btn.setFixedHeight(22)
+        self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+        self.ui.led_img_btn.setFixedWidth(22)
+        self.ui.led_img_btn.setFixedHeight(22)
+        self.ui.led_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+        self.ui.arm_img_btn.setFixedWidth(22)
+        self.ui.arm_img_btn.setFixedHeight(22)
+        self.ui.arm_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+        self.ui.steer_img_btn.setFixedWidth(22)
+        self.ui.steer_img_btn.setFixedHeight(22)
+        self.ui.steer_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/云台停止.png)}")
+        self.ui.steer_img_btn.setFixedWidth(22)
+        self.ui.steer_img_btn.setFixedHeight(22)
+        self.ui.steer_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/前进.png)}")
+        self.ui.open_sonar_btn.setText('')
+        self.ui.open_sonar_btn.setFixedWidth(22)
+        self.ui.open_sonar_btn.setFixedHeight(22)
+        self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+        self.ui.mode_img_btn.setFixedWidth(22)
+        self.ui.mode_img_btn.setFixedHeight(22)
+        self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/停止.png)}")
+        # self.ui.groupBox_3.setFixedWidth(1800)
+        # self.ui.groupBox_3.setFixedHeight(626)
+        # 设置边框线
+        self.ui.front_video_label.setFixedWidth(1346)
+        self.ui.front_video_label.setFixedHeight(842)
+        # 设置边框样式 可选样式有Box Panel等
+        self.ui.front_video_label.setFrameShape(QFrame.Box)
+        # 设置阴影 只有加了这步才能设置边框颜色
+        # 可选样式有Raised、Sunken、Plain（这个无法设置颜色）等
+        # self.ui.front_video_label.setFrameShadow(QFrame.Raised)
+        # 设置线条宽度
+        self.ui.front_video_label.setLineWidth(5)
+        # 设置背景颜色，包括边框颜色
+        self.ui.front_video_label.setStyleSheet('border-width: 1px;border-style: solid;border-color: rgb(255, 170, 0);')
+        print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
+        self.ui.front_video_label.setScaledContents(True)  # 设置图片自动适应标签大小
+        self.ui.back_video_label.setFixedWidth(446)
+        self.ui.back_video_label.setFixedHeight(223)
+        # 设置边框样式 可选样式有Box Panel等
+        self.ui.back_video_label.setFrameShape(QFrame.Box)
+        # 设置阴影 只有加了这步才能设置边框颜色
+        # 可选样式有Raised、Sunken、Plain（这个无法设置颜色）等
+        self.ui.back_video_label.setFrameShadow(QFrame.Raised)
+        # 设置线条宽度
+        self.ui.back_video_label.setLineWidth(5)
+        # 设置背景颜色，包括边框颜色
+        self.ui.back_video_label.setStyleSheet('border-width: 1px;border-style: solid;border-color: rgb(255, 170, 0);')
+        self.ui.back_video_label.setScaledContents(True)  # 设置图片自动适应标签大小
 
     # 初始化背景图片
     def init_image(self):
-        self.ui.init_motor_btn.setStyleSheet('QPushButton{color:#FFFFFF,border-image:url(./statics/images/装饰.png)}')
+        # self.ui.init_motor_btn.setStyleSheet('QPushButton{color:#FFFFFF,border-image:url(./statics/images/装饰.png)}')
         self.ui.back_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
         self.ui.back_camera_cap.setStyleSheet('QLabel{color:#FFFFFF}')
         self.ui.front_camera_cap.setStyleSheet('QPushButton{border-image:url(./statics/images/装饰.png)}')
@@ -431,15 +503,6 @@ class MainDialog(QMainWindow):
         self.ui.front_camera_video.clicked.connect(self.front_video_info)
         self.ui.back_camera_cap.clicked.connect(self.back_cap_info)
         self.ui.back_camera_video.clicked.connect(self.back_video_info)
-        # 使能电机
-        self.ui.init_motor_btn.clicked.connect(self.init_motor)
-        # 滑动条拖动
-        self.ui.speed_slider.valueChanged.connect(self.update_slider)
-        self.ui.deep_slider.valueChanged.connect(self.update_slider)
-        self.ui.angle_slider.valueChanged.connect(self.update_slider)
-        self.ui.speed_radio_button.clicked.connect(self.update_slider)
-        self.ui.angle_radio_button.clicked.connect(self.update_slider)
-        self.ui.deep_radio_button.clicked.connect(self.update_slider)
         # 视频地址设置绑定
         # 视频添加文字水印绑定
         self.setting_dlg.ui.text1_button.clicked.connect(self.update_frame_text)
@@ -447,9 +510,41 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.text3_button.clicked.connect(self.update_frame_text)
         self.setting_dlg.ui.fva_button.clicked.connect(self.update_video_address)
         self.setting_dlg.ui.bva_button.clicked.connect(self.update_video_address)
-        self.ui.show_video_button.clicked.connect(self.start_video)
         # 打开声呐
         self.ui.open_sonar_btn.clicked.connect(self.open_sonar)
+        # 定向和定深
+        self.ui.keep_direction_btn.clicked.connect(self.deep_direction)
+        self.ui.move_direction_btn.clicked.connect(self.deep_direction)
+        self.ui.keep_deep_btn.clicked.connect(self.deep_direction)
+        self.ui.move_deep_btn.clicked.connect(self.deep_direction)
+
+    # 朝向和深度保持
+    def deep_direction(self):
+        if self.sender() == self.ui.keep_direction_btn and self.ui.move_direction_btn.isChecked():
+            self.ui.move_direction_btn.setChecked(False)
+        if self.sender() == self.ui.move_direction_btn and self.ui.keep_direction_btn.isChecked():
+            self.ui.keep_direction_btn.setChecked(False)
+        if self.sender() == self.ui.move_deep_btn and self.ui.keep_deep_btn.isChecked():
+            self.ui.keep_deep_btn.setChecked(False)
+        if self.sender() == self.ui.keep_deep_btn and self.ui.move_deep_btn.isChecked():
+            self.ui.move_deep_btn.setChecked(False)
+        if self.ui.keep_direction_btn.isChecked():
+            self.datamanager_obj.b_keep_direction = 1
+        else:
+            self.datamanager_obj.b_keep_direction = 0
+
+        if self.ui.move_direction_btn.isChecked():
+            self.datamanager_obj.b_move_direction = 1
+        else:
+            self.datamanager_obj.b_move_direction = 0
+        if self.ui.keep_deep_btn.isChecked():
+            self.datamanager_obj.b_keep_deep = 1
+        else:
+            self.datamanager_obj.b_keep_deep = 0
+        if self.ui.move_deep_btn.isChecked():
+            self.datamanager_obj.b_move_deep = 1
+        else:
+            self.datamanager_obj.b_move_deep = 0
 
     # 打开声呐
     def open_sonar(self):
@@ -522,22 +617,6 @@ class MainDialog(QMainWindow):
                 self.frame_text_dict['text3'] = [t3_x, t3_y, show_text3]
             else:
                 self.frame_text_dict['text3'] = []
-
-    def update_slider(self):
-        speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value() + 1
-        deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
-        angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
-        self.ui.speed_slider_label.setText(" 油门: %s " % speed_slider_value)
-        self.ui.deep_slider_label.setText(" 深度: %s " % deep_slider_value)
-        self.ui.angle_slider_label.setText(" 角度: %s " % angle_slider_value)
-        if self.ui.speed_radio_button.isChecked():
-            self.datamanager_obj.speed_slider_value = speed_slider_value
-        if self.ui.deep_radio_button.isChecked():
-            self.datamanager_obj.deep_slider_value = deep_slider_value
-        if self.ui.angle_radio_button.isChecked():
-            self.datamanager_obj.angle_slider_value = angle_slider_value
-        # print('min max value', self.ui.speed_slider.maximum(), self.ui.speed_slider.minimum(),
-        #       self.ui.speed_slider.value())
 
     # 更新pid参数
     def update_pid(self, value):
@@ -753,10 +832,14 @@ class MainDialog(QMainWindow):
 
     # 显示数据
     def update_base_info(self):
-        if self.datamanager_obj.joystick_obj.b_connect == 1:
-            self.ui.joystick_label.setText(" 遥控 ")
+        if self.datamanager_obj.tcp_server_obj.b_connect == 1:
+            self.ui.robot_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/在线.png)}")
         else:
-            self.ui.joystick_label.setText(" 无遥控 ")
+            self.ui.robot_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
+        if self.datamanager_obj.joystick_obj.b_connect == 1:
+            self.ui.joystick_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/在线.png)}")
+        else:
+            self.ui.joystick_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
         deep_str = " 深度:%.02f m" % self.datamanager_obj.tcp_server_obj.deep
         press_str = " 压力: %.02f " % self.datamanager_obj.tcp_server_obj.press
         temperature_str = " 水温: %.02f " % self.datamanager_obj.tcp_server_obj.temperature
@@ -765,48 +848,60 @@ class MainDialog(QMainWindow):
         else:
             leak_str = " *已漏水(%d)* " % self.datamanager_obj.tcp_server_obj.is_leak_water
         speed_str = " 速度  % d %% " % (self.datamanager_obj.tcp_server_obj.speed * 25)
-        if self.datamanager_obj.tcp_server_obj.is_big_light:
+        if self.datamanager_obj.tcp_server_obj.is_headlight:
             light_str = " 灯： 开 "
+            self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
+            self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+            light_str = " 灯： 关 "
+        if self.datamanager_obj.tcp_server_obj.is_ledlight:
+            light_str = " 灯： 开 "
+            self.ui.led_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
+        else:
+            self.ui.led_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
             light_str = " 灯： 关 "
         if self.datamanager_obj.tcp_server_obj.is_sonar:
-            sonar_str = " 声呐： 开 "
+            sonar_str = " 开 "
+            self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
-            sonar_str = " 声呐： 关 "
+            sonar_str = " 关 "
+            self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
         if self.datamanager_obj.tcp_server_obj.camera_angle_pwm == 0:
-            camera_steer_str = " 舵机： 停止 "
+            camera_steer_str = "停止"
         elif self.datamanager_obj.tcp_server_obj.camera_angle_pwm == 2:
-            camera_steer_str = " 舵机： 上仰 "
+            camera_steer_str = "云台上"
         else:
-            camera_steer_str = " 舵机： 下俯 "
+            camera_steer_str = "云台下"
+        self.ui.steer_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%camera_steer_str)
         if self.datamanager_obj.tcp_server_obj.arm_pwm == 0:
-            arm_str = " 机械臂： 停止 "
+            arm_str = "关"
         elif self.datamanager_obj.tcp_server_obj.arm_pwm == 1:
-            arm_str = " 机械臂： 打开 "
+            arm_str = "开"
         else:
-            arm_str = " 机械臂： 关闭 "
-        x_angle_str = " x角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[0]
-        y_angle_str = " y角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[1]
-        z_angle_str = " z角度： %d " % self.datamanager_obj.tcp_server_obj.theta_list[2]
-        self.ui.pressure_label.setText(press_str)
-        self.ui.motor_lock_label.setText(' 解锁：1 ')
+            arm_str = "关"
+        self.ui.arm_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%arm_str)
+        x_angle_str = " 俯仰角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[0]
+        y_angle_str = " 横滚角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[1]
+        z_angle_str = " 偏航角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[2]
+        self.ui.direct_x_label.setText(x_angle_str)
+        self.ui.direct_y_label.setText(y_angle_str)
+        self.ui.direct_z_label.setText(z_angle_str)
+        self.ui.press_label.setText(press_str)
         self.ui.temperature_label.setText(temperature_str)
         self.ui.leak_label.setText(leak_str)
         self.ui.deep_label.setText(deep_str)
         self.ui.speed_label.setText(speed_str)
-        self.ui.light_label.setText(light_str)
-        self.ui.sonar_label.setText(sonar_str)
-        self.ui.camera_steer_label.setText(camera_steer_str)
-        self.ui.arm_label.setText(arm_str)
         # 直接字符显示角度
         # self.ui.angle_x_label.setText(x_angle_str)
         # self.ui.angle_y_label.setText(y_angle_str)
         # self.ui.angle_z_label.setText(z_angle_str)
-
-        control_info_dict = {0: ' 停止', 1: ' 前进', 2: ' 后退', 3: ' 左转', 4: ' 右转', 5: ' 上升', 6: ' 下降', 7: ' 左移',
-                             8: ' 右移'}
+        # 设置运动模式提示停止
+        control_info_dict = {0: '停止', 1: '前进', 2: '后退', 3: '左转', 4: '右转', 5: '上升', 6: '下降', 7: '左移',
+                             8: '右移'}
         mode_str = control_info_dict[self.datamanager_obj.move]
-        self.ui.mode_label.setText(mode_str)
+        self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%mode_str)
+        self.ui.auto_deep_label.setText(" 深度: %f " % 1)
+        self.ui.auto_direction_label.setText(" 航向: %f" % 1)
 
     # 获取保存数据路径
     def get_path(self, b_save_img=True, b_front=True):
@@ -861,11 +956,15 @@ class MainDialog(QMainWindow):
                 show_msg = self.write_frame_front_show_msg
                 self.ui.front_camera_video.setChecked(False)
                 self.write_frame_front_show_msg = ''
+                self.ui.front_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
             else:
+                # 切换图片
+                self.ui.front_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像开始.png)}")
                 show_msg = '开始录像，路径:' + save_path
         # 结束录像
         else:
             print('self.ui.front_camera_video.isChecked()', self.ui.front_camera_video.isChecked())
+            self.ui.front_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
             self.is_write_frame_front = False
             self.write_frame_front_show_msg = ''
             show_msg = '结束录制'
@@ -885,13 +984,18 @@ class MainDialog(QMainWindow):
                 show_msg = self.write_frame_back_show_msg
                 self.ui.back_camera_video.setChecked(False)
                 self.write_frame_back_show_msg = ''
+                self.ui.back_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
             else:
+                # 切换图片
+                self.ui.back_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像开始.png)}")
                 show_msg = '开始录像，路径:' + save_path
         # 结束录像
         else:
+            self.ui.back_camera_video.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/录像停止.png)}")
             self.is_write_frame_back = False
             self.write_frame_back_show_msg = ''
             show_msg = '结束录制'
+            # 切换图片
         reply = QMessageBox.question(self, '提示', show_msg, QMessageBox.Close, QMessageBox.Close)
 
     # 初始化电机
@@ -1032,11 +1136,15 @@ class MainDialog(QMainWindow):
 if __name__ == '__main__':
     myapp = QApplication(sys.argv)
     main_windows = MainDialog()
-    main_windows.resize(1920, 1080)
-    # main_windows.setStyleSheet("#MainWindow{border-image:url(./statics/images/背景.png);}")  # 设置背景图
+
+    # main_windows.resize(1920, 1080)
+    # main_windows.resize(1800, 700)
+    # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/标注.png);}")  # 设置背景图
+    # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
-    apply_stylesheet(myapp, theme='dark_teal.xml')
+    # apply_stylesheet(myapp, theme='dark_teal.xml')
+    # apply_stylesheet(myapp, theme='light_red.xml')
     main_windows.show()
     sys.exit(myapp.exec_())

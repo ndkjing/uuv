@@ -3,7 +3,8 @@
 """
 import time
 from common import tcpServer
-from driver import joystick_no_pygame as joystick
+# from driver import joystick_no_pygame as joystick
+from driver import joystick
 import config
 import threading
 
@@ -45,6 +46,11 @@ class DataManager(object):
         self.backup_pwm = [0, 1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         self.receive_pwm = [1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500]
         self.is_start = 0  # 是否已开启
+        self.b_keep_deep=0
+        self.b_move_deep=0
+        self.b_keep_direction=0
+        self.b_move_direction=0
+
 
     def init_run(self):
         t1 = threading.Thread(target=self.tcp_server_obj.wait_connect)
