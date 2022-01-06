@@ -141,26 +141,35 @@ class TcpServerQt(QWidget):
         self.speed = 2
         # 水下机器人运动方向
         self.move = 0
+        self.pre_port = None
 
     def new_socket_slot(self):
-        sock = self.server.nextPendingConnection()
-        peer_address = sock.peerAddress().toString()
-        peer_port = sock.peerPort()
-        news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
-        sock.readyRead.connect(lambda: self.read_data_slot(sock))
-        sock.disconnected.connect(lambda: self.disconnected_slot(sock))
-        self.sock = sock
-        self.b_connect = 1
+        try:
+            sock = self.server.nextPendingConnection()
+            peer_address = sock.peerAddress().toString()
+            peer_port = sock.peerPort()
+            news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
+            print('Connected with address {}, port {}'.format(peer_address, str(peer_port)))
+            if self.pre_port is None:
+                self.pre_port = peer_port
+            elif peer_port - self.pre_port == 1:
+                print('port2', peer_port)
+                return
+            sock.readyRead.connect(lambda: self.read_data_slot(sock))
+            sock.disconnected.connect(lambda: self.disconnected_slot(sock))
+            self.sock = sock
+            self.b_connect = 1
+        except Exception as e:
+            print('error', e)
 
     def read_data_slot(self, sock):
         while sock.bytesAvailable():
             datagram = sock.read(sock.bytesAvailable())
             try:
                 message = datagram.decode()
-                print('socket receive data', message)
+                # print('socket receive data', message)
                 message = str(message)
                 message = message.strip()
-
                 press_find = re.findall(r'\"pressure\":(.*?),\"', message)
                 if len(press_find) > 0:
                     self.press = float(press_find[0])
@@ -212,8 +221,9 @@ class TcpServerQt(QWidget):
                 move_find = re.findall(r'\"move\":(.*?)}', message)
                 if len(move_find) > 0:
                     self.move = int(move_find[0])
-                print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_headlight,
-                      self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
+                # print('self.move',self.move)
+                # print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_headlight,
+                #       self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
             except Exception as e:
                 print('tcp data error', e)
             # answer = self.get_answer(message).replace('{br}', '\n')

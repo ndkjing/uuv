@@ -193,8 +193,10 @@ class MainDialog(QMainWindow):
                 time.sleep(1)
                 continue
             start_time = time.time()
+            last_read_time=None
             while True:
                 ret, frame = cap.read()
+                # print(time.time(),'ret',ret)
                 if ret:
                     if (time.time() - start_time) > 0.1:
                         # 绘制文字
@@ -250,8 +252,9 @@ class MainDialog(QMainWindow):
             start_time = time.time()
             while True:
                 ret, frame = cap.read()
+                # print(time.time(),'ret',ret)
                 if ret:
-                    if (time.time() - start_time) > 0.1:
+                    if (time.time() - start_time) > 0.13:
                         # 绘制文字
                         w_frame = 300
                         h_frame = 100
@@ -394,8 +397,8 @@ class MainDialog(QMainWindow):
         self.ui.front_camera_video.setCheckable(True)
         self.ui.back_camera_video.setCheckable(True)
         # 设置当前显示视频地址
-        self.setting_dlg.ui.fva_line_edit.setText(config.front_video_src)
-        self.setting_dlg.ui.bva_line_edit.setText(config.back_video_src)
+        self.setting_dlg.ui.fva_line_edit.setText(str(config.front_video_src))
+        self.setting_dlg.ui.bva_line_edit.setText(str(config.back_video_src))
         # 摄像头图标设置
         self.ui.front_camera_cap.setText('')
         self.ui.front_camera_cap.setFixedWidth(32)
@@ -898,7 +901,7 @@ class MainDialog(QMainWindow):
         # 设置运动模式提示停止
         control_info_dict = {0: '停止', 1: '前进', 2: '后退', 3: '左转', 4: '右转', 5: '上升', 6: '下降', 7: '左移',
                              8: '右移'}
-        mode_str = control_info_dict[self.datamanager_obj.move]
+        mode_str = control_info_dict[self.datamanager_obj.tcp_server_obj.move]
         self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%mode_str)
         self.ui.auto_deep_label.setText(" 深度: %f " % 1)
         self.ui.auto_direction_label.setText(" 航向: %f" % 1)

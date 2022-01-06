@@ -1,0 +1,5 @@
+requests
+opencv-python
+pygame
+pyqt5
+pillow

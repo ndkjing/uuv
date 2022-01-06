@@ -146,24 +146,13 @@ class Jostick:
                     elif button_input[3] == 1:
                         self.mode = 0
                     if button_input[4] == 1:
-                        self.arm += 0.05
-                        if self.arm > 1:
-                            self.arm = 1
-                        self.arm = round(self.arm, 2)
+                        self.arm = 1
                     if button_input[6] == 1:
-                        self.arm -= 0.05
-                        if self.arm < 0:
-                            self.arm = 0
-                        self.arm = round(self.arm, 2)
+                        self.arm = 4
                     if button_input[5] == 1:
-                        self.camera_steer += 0.05
-                        if self.camera_steer > 1:
-                            self.camera_steer = 1
-                        self.camera_steer = round(self.camera_steer, 2)
+                        self.camera_steer = 2
                     if button_input[7] == 1:
-                        self.camera_steer -= 0.05
-                        if self.camera_steer < 0:
-                            self.camera_steer = 0
+                        self.camera_steer = 8
                         self.camera_steer = round(self.camera_steer, 2)
                     # print(time.time(),
                     #       'self.b_ledlight,self.b_sonar,self.b_headlight,self.mode,self.arm,self.camera_steer',
