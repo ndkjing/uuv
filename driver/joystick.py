@@ -15,7 +15,7 @@ def Singleton(cls):
     return _singleton
 
 
-threshold = 0.2
+threshold = 0.7
 
 
 @Singleton
@@ -99,9 +99,10 @@ class Jostick:
                         7:左移
                         8:右移
                         """
+                    # print('self.axes_0,self.axes_1,self.axes_2,self.axes_3',self.axes_0,self.axes_1,self.axes_2,self.axes_3)
                     if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
                             self.axes_2) < threshold and abs(
-                            self.axes_3) < threshold:
+                        self.axes_3) < threshold:
                         self.move = 0
                     elif abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
                         if self.axes_2 >= threshold:
@@ -149,11 +150,14 @@ class Jostick:
                         self.arm = 1
                     if button_input[6] == 1:
                         self.arm = 4
+                    if button_input[4] == 0 and button_input[6] == 0:
+                        self.arm = 0
                     if button_input[5] == 1:
                         self.camera_steer = 2
                     if button_input[7] == 1:
                         self.camera_steer = 8
-                        self.camera_steer = round(self.camera_steer, 2)
+                    if button_input[5] == 0 and button_input[7] == 0:
+                        self.camera_steer = 0
                     # print(time.time(),
                     #       'self.b_ledlight,self.b_sonar,self.b_headlight,self.mode,self.arm,self.camera_steer',
                     #       self.b_ledlight, self.b_sonar, self.b_headlight, self.mode, self.arm, self.camera_steer)
@@ -174,7 +178,7 @@ class Jostick:
                     self.get_count()
                     # print('self.count', self.count)
                 else:
-                    print('self.count',self.count)
+                    print('self.count', self.count)
                     if self.b_connect:
                         pygame.joystick.quit()
                         pygame.quit()

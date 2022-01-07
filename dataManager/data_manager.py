@@ -104,7 +104,8 @@ class DataManager(object):
                 sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
                 arm_info = 'arm%sz' % self.joystick_obj.arm
                 pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
-                mode_info = 'mode%sz' % (self.joystick_obj.mode)
+                mode_info = 'mode%sz' % self.joystick_obj.mode
+                head_info = 'head%sz' % self.joystick_obj.b_headlight
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             else:
                 move_info = 'move%sz' % self.move
@@ -115,6 +116,7 @@ class DataManager(object):
                 arm_info = 'arm%sz' % self.arm
                 pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
                 mode_info = 'mode%sz' % (self.is_auto)
+                head_info = 'head%sz' % (self.joystick_obj.b_headlight)
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             send_data_list = []
             # camera_info = 'camera%sz' % self.joystick_obj.camera_steer
@@ -131,14 +133,15 @@ class DataManager(object):
             send_data_list.append(move_info)
             # send_data_list.append(pid_info)
             send_data_list.append(mode_info)
+            send_data_list.append(head_info)
             try:
                 if send_data_method == 1:
                     for data in send_data_list:
                         # if 'move' not in data:
                         #     continue
-                        # print('send data', data)
+                        print('send data', data)
                         self.tcp_server_obj.write_data(data)
-                        time.sleep(0.02)
+                        time.sleep(0.005)
                 else:
                     pass
             except ConnectionResetError as e:

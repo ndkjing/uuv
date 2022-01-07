@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import *
 import PyQt5
 import cv2
 from PIL import ImageFont, ImageDraw, Image
-from qt_material import apply_stylesheet
+# from qt_material import apply_stylesheet
 import numpy as np
 import math
 
@@ -555,6 +555,7 @@ class MainDialog(QMainWindow):
             self.datamanager_obj.sonar = 0
         else:
             self.datamanager_obj.sonar = 1
+        print('open sonar')
         # import subprocess
         command_sonar1 = "F:\\apps\pingviewer_release\deploy\pingviewer.exe"
         command_sonar2 = "D:\\apps\pingviewer_release\deploy\pingviewer.exe"
@@ -851,13 +852,13 @@ class MainDialog(QMainWindow):
         else:
             leak_str = " *已漏水(%d)* " % self.datamanager_obj.tcp_server_obj.is_leak_water
         speed_str = " 速度  % d %% " % (self.datamanager_obj.tcp_server_obj.speed * 25)
-        if self.datamanager_obj.tcp_server_obj.is_headlight:
+        if self.datamanager_obj.joystick_obj.b_headlight:
             light_str = " 灯： 开 "
             self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
             self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
             light_str = " 灯： 关 "
-        if self.datamanager_obj.tcp_server_obj.is_ledlight:
+        if self.datamanager_obj.joystick_obj.b_ledlight:
             light_str = " 灯： 开 "
             self.ui.led_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
