@@ -28,7 +28,7 @@ if not os.path.exists(save_imgs_dir):
 if not os.path.exists(save_videos_dir):
     os.mkdir(save_videos_dir)
 # tcp 服务器地址和端口
-target_server_type = 4  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
+target_server_type = 1  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
 if target_server_type == 0:
     server_ip = '192.168.199.222'
 elif target_server_type == 1:
@@ -54,8 +54,9 @@ if target_server_type == 4:
 #     back_video_src ="rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_1?expire=1665729938&id=370583278005051392&t=1f89772b120962ae3f4f8e5ff794ece8127a9e53796c9599eb2b47584875bc70&ev=100"
 else:
     # 公司 摄像头
-    a = "rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_1?expire=1665729938&id=370583278005051392&t=1f89772b120962ae3f4f8e5ff794ece8127a9e53796c9599eb2b47584875bc70&ev=100"
+    a = "rtmp://rtmp01open.ys7.com:1935/v3/openlive/F77671789_1_1?expire=1673004384&id=401094514567700480&t=3ae57ce5ae6a9ce391138b4567e3283d176573583862178671d8ada8ac1e7693&ev=100"
     # 厂房摄像头
-    b = "rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1665728758&id=370578328580620288&t=f2a7fc8cc13d3250b45bc5de20b7f49728cb84369039598d20a487318d441b72&ev=100"
+    # b = "rtmp://rtmp01open.ys7.com:1935/v3/openlive/D50551834_1_2?expire=1665728758&id=370578328580620288&t=f2a7fc8cc13d3250b45bc5de20b7f49728cb84369039598d20a487318d441b72&ev=100"
+    b = "dsad"
     front_video_src = a
-    back_video_src = a
+    back_video_src = b

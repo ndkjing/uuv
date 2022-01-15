@@ -3,6 +3,9 @@ import copy
 import sys
 import os
 import time
+
+import pyqtgraph
+
 from ui import main_ui, setting_ui, angle
 from PyQt5.QtWidgets import QDialog, QMainWindow
 from PyQt5.QtCore import *
@@ -20,7 +23,7 @@ from dataManager import data_manager
 from common import draw_angle
 import config
 from storage import save_data
-import resources
+import resource
 
 
 class SettingWindow(QDialog):
@@ -185,6 +188,7 @@ class MainDialog(QMainWindow):
         # 更新pid参数
         self.update_pid(value=None)
         self.init_base_ui()
+        self.front_video_position = 0  # 前摄视频流位置  0：在中间   1在后摄位置
 
     def show_front_video(self):
         while True:
@@ -193,7 +197,7 @@ class MainDialog(QMainWindow):
                 time.sleep(1)
                 continue
             start_time = time.time()
-            last_read_time=None
+            last_read_time = None
             while True:
                 ret, frame = cap.read()
                 # print(time.time(),'ret',ret)
@@ -205,17 +209,17 @@ class MainDialog(QMainWindow):
                         for k, v in self.frame_text_dict.items():
                             if len(v) == 3:
                                 if v[0] == 0:
-                                    w = 100
+                                    w = 20
                                 elif v[0] == 1:
                                     w = int(w_frame / 2)
                                 else:
-                                    w = w_frame - 200
+                                    w = w_frame - 20*len(v[2])
                                 if v[1] == 0:
                                     h = 100
                                 elif v[1] == 1:
                                     h = int(h_frame / 2)
                                 else:
-                                    h = h_frame - 200
+                                    h = h_frame - 20*len(v[2])
                                 # 判断是否包含中文
                                 if is_contain_chinese(v[2]):
                                     fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径
@@ -312,7 +316,10 @@ class MainDialog(QMainWindow):
         # result = result[..., :3]
         # self.frame_front = result
         # print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
-        self.ui.front_video_label.setPixmap(pix_image)
+        if self.front_video_position == 0:
+            self.ui.front_video_label.setPixmap(pix_image)
+        else:
+            self.ui.back_video_label.setPixmap(pix_image)
         time3 = time.time()
         # print("change time",time3-time2,"show_time",time2-time1)
 
@@ -327,7 +334,10 @@ class MainDialog(QMainWindow):
         # result = np.array(ptr, dtype=np.uint8).reshape(temp_shape)
         # result = result[..., :3]
         # self.frame_back = result
-        self.ui.back_video_label.setPixmap(pix_image)
+        if self.front_video_position == 0:
+            self.ui.back_video_label.setPixmap(pix_image)
+        else:
+            self.ui.front_video_label.setPixmap(pix_image)
 
     # 绘制角度
     def paint_angle(self):
@@ -355,44 +365,86 @@ class MainDialog(QMainWindow):
         初始化UI和设置一些UI启动值
         :return:
         """
+        self.setWindowTitle('行星轮水下机器人')
+        self.setWindowIcon(QIcon(':/icons/uuvImages/logo.png'))
+        # self.setWindowIcon(QIcon('uuvImages/logo.png'))
         # 滑动条最大值在左边，所以这样设置
         # 设置字体大小
+        self.ui.switch_video_label.setFont(QFont('Arial', 16))
+        self.ui.switch_video_label.setStyleSheet("color:rgb(255,255,255,255)")
+        self.ui.setting_label.setFont(QFont('Arial', 16))
+        self.ui.setting_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.back_label.setFont(QFont('Arial', 16))
+        self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.front_label.setFont(QFont('Arial', 16))
-        self.ui.logo_label.setFont(QFont('Arial', 16))
+        self.ui.front_label.setStyleSheet("color:rgb(255,255,255,255)")
+        self.ui.logo_label.setFont(QFont('Arial', 18,QFont.Bold))
+        self.ui.logo_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.leak_label.setFont(QFont('Arial', 16))
+        self.ui.leak_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.arm_label.setFont(QFont('Arial', 16))
-        self.ui.front_video_label.setFont(QFont('Arial', 16))
+        self.ui.arm_label.setStyleSheet("color:rgb(255,255,255,255)")
+        # self.ui.front_video_label.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.front_camera_cap.setFont(QFont('Arial', 16))
+        self.ui.front_camera_cap.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.front_camera_video.setFont(QFont('Arial', 16))
-        self.ui.back_video_label.setFont(QFont('Arial', 16))
+        self.ui.front_camera_video.setStyleSheet("color:rgb(255,255,255,255)")
+        # self.ui.back_video_label.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.back_camera_cap.setFont(QFont('Arial', 16))
+        self.ui.back_camera_cap.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.back_camera_video.setFont(QFont('Arial', 16))
+        self.ui.back_camera_video.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.mode_label.setFont(QFont('Arial', 16))
+        self.ui.mode_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.deep_label.setFont(QFont('Arial', 16))
+        self.ui.deep_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.temperature_label.setFont(QFont('Arial', 16))
+        self.ui.temperature_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.switch_video_button.setFont(QFont('Arial', 16))
+        # self.ui.switch_video_button.setStyleSheet("color:rgb(255,255,255,255)")
         # self.ui.open_sonar_btn.setFont(QFont('Arial', 16))
         self.ui.setting_btn.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.headlight_label.setFont(QFont('Arial', 16))
+        self.ui.headlight_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.led_label.setFont(QFont('Arial', 16))
+        self.ui.led_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.steer_label.setFont(QFont('Arial', 16))
+        self.ui.steer_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.press_label.setFont(QFont('Arial', 16))
+        self.ui.press_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.speed_label.setFont(QFont('Arial', 16))
+        self.ui.speed_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.robot_text_label.setFont(QFont('Arial', 16))
+        self.ui.robot_text_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.joystick_text_label.setFont(QFont('Arial', 16))
-        self.ui.auto_label.setFont(QFont('Arial', 16))
+        self.ui.joystick_text_label.setStyleSheet("color:rgb(255,255,255,255)")
+        self.ui.auto_label.setFont(QFont('Arial',20, 16))
+        self.ui.auto_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.auto_deep_label.setFont(QFont('Arial', 16))
+        self.ui.auto_deep_label.setStyleSheet("color:rgb(193,113,4,255)")
         self.ui.auto_direction_label.setFont(QFont('Arial', 16))
+        self.ui.auto_direction_label.setStyleSheet("color:rgb(193,113,4,255)")
         self.ui.keep_deep_btn.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.keep_direction_btn.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.move_deep_btn.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.move_direction_btn.setFont(QFont('Arial', 16))
+        # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.v_label.setFont(QFont('Arial', 16))
+        self.ui.v_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.sonar_text_label.setFont(QFont('Arial', 16))
+        self.ui.sonar_text_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.direct_x_label.setFont(QFont('Arial', 16))
+        self.ui.direct_x_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.direct_y_label.setFont(QFont('Arial', 16))
+        self.ui.direct_y_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.direct_z_label.setFont(QFont('Arial', 16))
+        self.ui.direct_z_label.setStyleSheet("color:rgb(255,255,255,255)")
         # 设置按钮为按下不弹起
         self.ui.front_camera_video.setCheckable(True)
         self.ui.back_camera_video.setCheckable(True)
@@ -442,6 +494,14 @@ class MainDialog(QMainWindow):
         self.ui.open_sonar_btn.setFixedWidth(22)
         self.ui.open_sonar_btn.setFixedHeight(22)
         self.ui.open_sonar_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
+        self.ui.switch_video_button.setText('')
+        self.ui.switch_video_button.setFixedWidth(22)
+        self.ui.switch_video_button.setFixedHeight(22)
+        self.ui.switch_video_button.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/切换.png)}")
+        self.ui.setting_btn.setText('')
+        self.ui.setting_btn.setFixedWidth(22)
+        self.ui.setting_btn.setFixedHeight(22)
+        self.ui.setting_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/设置.png)}")
         self.ui.mode_img_btn.setFixedWidth(22)
         self.ui.mode_img_btn.setFixedHeight(22)
         self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/停止.png)}")
@@ -520,6 +580,14 @@ class MainDialog(QMainWindow):
         self.ui.move_direction_btn.clicked.connect(self.deep_direction)
         self.ui.keep_deep_btn.clicked.connect(self.deep_direction)
         self.ui.move_deep_btn.clicked.connect(self.deep_direction)
+        self.ui.switch_video_button.clicked.connect(self.change_front_video_position)
+
+    # 更新视频位置回调函数
+    def change_front_video_position(self):
+        if self.front_video_position == 0:
+            self.front_video_position = 1
+        elif self.front_video_position == 1:
+            self.front_video_position = 0
 
     # 朝向和深度保持
     def deep_direction(self):
@@ -876,14 +944,15 @@ class MainDialog(QMainWindow):
             camera_steer_str = "云台上"
         else:
             camera_steer_str = "云台下"
-        self.ui.steer_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%camera_steer_str)
+        self.ui.steer_img_btn.setStyleSheet(
+            "QPushButton{border-image: url(:/icons/uuvImages/%s.png)}" % camera_steer_str)
         if self.datamanager_obj.tcp_server_obj.arm_pwm == 0:
             arm_str = "关"
         elif self.datamanager_obj.tcp_server_obj.arm_pwm == 1:
             arm_str = "开"
         else:
             arm_str = "关"
-        self.ui.arm_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%arm_str)
+        self.ui.arm_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}" % arm_str)
         x_angle_str = " 俯仰角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[0]
         y_angle_str = " 横滚角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[1]
         z_angle_str = " 偏航角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[2]
@@ -903,7 +972,7 @@ class MainDialog(QMainWindow):
         control_info_dict = {0: '停止', 1: '前进', 2: '后退', 3: '左转', 4: '右转', 5: '上升', 6: '下降', 7: '左移',
                              8: '右移'}
         mode_str = control_info_dict[self.datamanager_obj.tcp_server_obj.move]
-        self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}"%mode_str)
+        self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}" % mode_str)
         self.ui.auto_deep_label.setText(" 深度: %f " % 1)
         self.ui.auto_direction_label.setText(" 航向: %f" % 1)
 
@@ -1144,7 +1213,7 @@ if __name__ == '__main__':
     # main_windows.resize(1920, 1080)
     # main_windows.resize(1800, 700)
     # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/标注.png);}")  # 设置背景图
-    # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
+    main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
@@ -1152,3 +1221,11 @@ if __name__ == '__main__':
     # apply_stylesheet(myapp, theme='light_red.xml')
     main_windows.show()
     sys.exit(myapp.exec_())
+
+
+
+"""
+生成res资源命令
+pyrcc5 resource.qrc -o resource.py
+
+"""

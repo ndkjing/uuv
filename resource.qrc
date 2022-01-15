@@ -22,5 +22,8 @@
     <file >uuvImages/开.png</file>
     <file >uuvImages/关.png</file>
     <file >uuvImages/背景.png</file>
+    <file >uuvImages/切换.png</file>
+    <file >uuvImages/设置.png</file>
+    <file >uuvImages/logo.png</file>
   </qresource>
 </RCC>

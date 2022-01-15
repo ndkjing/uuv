@@ -21,7 +21,8 @@ class DrawAngle:
         img = np.ones((self.size_w, self.size_w, 3), dtype="uint8")
         # img *= 255
         # 蓝色底
-        rgb = [153, 194, 255]
+        # rgb = [153, 194, 255]373d5f
+        rgb = [55, 61, 95]
         img[:, :, 0] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[2])
         img[:, :, 1] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[1])
         img[:, :, 2] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[0])
@@ -54,7 +55,8 @@ class DrawAngle:
         img = np.ones((self.size_w, self.size_w, 3), dtype="uint8")
         # img *= 255
         # 蓝色底
-        rgb = [153, 194, 255]
+        # rgb = [153, 194, 255]
+        rgb = [55, 61, 95]
         img[:, :, 0] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[2])
         img[:, :, 1] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[1])
         img[:, :, 2] = np.squeeze(np.ones((self.size_w, self.size_w, 1), dtype="uint8") * rgb[0])
