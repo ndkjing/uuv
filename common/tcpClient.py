@@ -45,10 +45,10 @@ class TcpClient:
                 logger.info({'response': str_response})
             # 发送了开始
             print('response',response,'str_response',str_response)
-            self.send('error')
+            # self.send('error')
             time.sleep(2)
 
 
 if __name__ == '__main__':
-    tcp_client_obj = TcpClient(ip="192.168.8.19",port=8080)
+    tcp_client_obj = TcpClient(ip="192.168.8.19",port=5566)
     tcp_client_obj.get()

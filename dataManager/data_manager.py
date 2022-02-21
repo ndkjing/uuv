@@ -28,7 +28,7 @@ class DataManager(object):
         #     self.tcp_server_obj = tcpServer.TcpServerQt()
         # else:
         #     self.tcp_server_obj = tcpServer.TcpServer()
-        self.joystick_obj = joystick.Jostick()
+        self.joystick_obj = joystick.JoyManager()
         # 自稳 0 非自稳 1 自稳  稳定深度和x,y,z角度
         self.is_auto = 0
         # 滑动条油门
@@ -97,15 +97,15 @@ class DataManager(object):
             #     move_info = 'move%sz' % joy_move
             #     speed_info = 'speed%sz' % joy_speed
             if config.only_joystick:
-                move_info = 'move%sz' % self.joystick_obj.move
-                speed_info = 'speed%sz' % self.joystick_obj.speed
-                camera_info = 'camera%sz' % self.joystick_obj.camera_steer
-                light_info = 'light%sz' % self.joystick_obj.b_ledlight
-                sonar_info = 'sonar%sz' % self.joystick_obj.b_sonar
-                arm_info = 'arm%sz' % self.joystick_obj.arm
+                move_info = 'move%sz' % self.joystick_obj.joy_obj.move
+                speed_info = 'speed%sz' % self.joystick_obj.joy_obj.speed
+                camera_info = 'camera%sz' % self.joystick_obj.joy_obj.camera_steer
+                light_info = 'light%sz' % self.joystick_obj.joy_obj.b_ledlight
+                sonar_info = 'sonar%sz' % self.joystick_obj.joy_obj.b_sonar
+                arm_info = 'arm%sz' % self.joystick_obj.joy_obj.arm
                 pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
-                mode_info = 'mode%sz' % self.joystick_obj.mode
-                head_info = 'head%sz' % self.joystick_obj.b_headlight
+                mode_info = 'mode%sz' % self.joystick_obj.joy_obj.mode
+                head_info = 'head%sz' % self.joystick_obj.joy_obj.b_headlight
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             else:
                 move_info = 'move%sz' % self.move
@@ -116,7 +116,7 @@ class DataManager(object):
                 arm_info = 'arm%sz' % self.arm
                 pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
                 mode_info = 'mode%sz' % (self.is_auto)
-                head_info = 'head%sz' % (self.joystick_obj.b_headlight)
+                head_info = 'head%sz' % (self.joystick_obj.joy_obj.b_headlight)
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             send_data_list = []
             # camera_info = 'camera%sz' % self.joystick_obj.camera_steer
@@ -139,7 +139,7 @@ class DataManager(object):
                     for data in send_data_list:
                         # if 'move' not in data:
                         #     continue
-                        print('send data', data)
+                        # print('send data', data)
                         self.tcp_server_obj.write_data(data)
                         time.sleep(0.005)
                 else:

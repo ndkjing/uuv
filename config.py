@@ -3,7 +3,7 @@ from common import utils
 
 # 判读程序相对路径，在打包后变成用户文件夹里面层级太深
 # root_path = os.path.dirname(os.path.abspath(__file__))
-# 使用绝对路径
+# 使用绝对路径 保存数据路径
 disk_list = [r'D:\\', r'E:\\', r'F:\\']
 root_path = None
 for disk in disk_list:
@@ -28,11 +28,12 @@ if not os.path.exists(save_imgs_dir):
 if not os.path.exists(save_videos_dir):
     os.mkdir(save_videos_dir)
 # tcp 服务器地址和端口
-target_server_type = 1  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
+target_server_type = 4  # 0 1002 wifi地址  1 1002网线地址  2 家里wifi地址 其他 控制箱地址
 if target_server_type == 0:
     server_ip = '192.168.199.222'
 elif target_server_type == 1:
     server_ip = '192.168.8.19'
+    # server_ip = '127.0.0.1'
 elif target_server_type == 2:
     server_ip = '192.168.1.8'
 else:
@@ -60,3 +61,5 @@ else:
     b = "dsad"
     front_video_src = a
     back_video_src = b
+
+need_restart_joy = False

@@ -110,7 +110,7 @@ class TcpServerQt(QWidget):
         self.bind_ip = config.tcp_server_ip  # 监听所有可用的接口
         self.bind_port = config.tcp_server_port  # 非特权端口号都可以使用
         self.server = QTcpServer(self)
-        if not self.server.listen(QHostAddress.AnyIPv4, config.tcp_server_port):
+        if not self.server.listen(QHostAddress.Any, config.tcp_server_port):
             self.browser.append(self.server.errorString())
         self.server.newConnection.connect(self.new_socket_slot)
         self.sock = None
@@ -157,6 +157,7 @@ class TcpServerQt(QWidget):
                 return
             sock.readyRead.connect(lambda: self.read_data_slot(sock))
             sock.disconnected.connect(lambda: self.disconnected_slot(sock))
+            print('sock.isOpen()', sock.isOpen())
             self.sock = sock
             self.b_connect = 1
         except Exception as e:
@@ -243,7 +244,12 @@ class TcpServerQt(QWidget):
         peer_address = sock.peerAddress().toString()
         peer_port = sock.peerPort()
         news = 'Disconnected with address {}, port {}'.format(peer_address, str(peer_port))
+        print(news)
         sock.close()
+        print('sock==self.sock', sock == self.sock)
+        self.sock = None
+        self.pre_port = None
+        self.b_connect=0
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
@@ -252,5 +258,8 @@ class TcpServerQt(QWidget):
 
 
 if __name__ == '__main__':
-    obj = TcpServer()
-    obj.start_server()
+    obj = TcpServerQt()
+    while True:
+        time.sleep(1)
+        print('1111')
+    # obj.start_server()

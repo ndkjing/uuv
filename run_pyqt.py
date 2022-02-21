@@ -131,7 +131,6 @@ class MainDialog(QMainWindow):
         # self.setWindowFlags(Qt.FramelessWindowHint)  # 隐藏边框
         # # 鼠标跟踪
         # self.setMouseTracking(True)
-
         self.ui = main_ui.Ui_MainWindow()
         self.ui.setupUi(self)
         self.datamanager_obj = data_manager.DataManager()
@@ -183,7 +182,7 @@ class MainDialog(QMainWindow):
                                                     parent=None,
                                                     run_func=self.save_video)
         # 获取游戏手柄数据
-        self.joystick_work = JpystickThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
+        self.joystick_work = JpystickThread(parent=None, run_func=self.datamanager_obj.joystick_obj.thread_joystick)
         self.joystick_work.start()
         # 更新pid参数
         self.update_pid(value=None)
@@ -713,8 +712,6 @@ class MainDialog(QMainWindow):
             self.setting_dlg.ui.v_d_label.setText('v_d:' + str(value / 10.0))
             self.datamanager_obj.pid_v[0] = float(value / 10.0)
         else:
-            # if not self.datamanager_obj.joystick_obj.b_connect:
-            #     self.datamanager_obj.joystick_obj.init_joystick()
             update = False
             data = save_data.get_data(config.save_pid_path)
             if data:
@@ -741,7 +738,7 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.ip_address_label.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip + \
                                                          ':' + str(self.datamanager_obj.tcp_server_obj.bind_port)))
 
-        self.setting_dlg.ui.joystick_label.setText('遥控:' + str(self.datamanager_obj.joystick_obj.count))
+        self.setting_dlg.ui.joystick_label.setText('遥控:' + str(self.datamanager_obj.joystick_obj.joy_obj.count))
 
     def start_server(self):
         self.setting_dlg.ui.ip_address_line_edit.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip))
@@ -908,7 +905,7 @@ class MainDialog(QMainWindow):
             self.ui.robot_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/在线.png)}")
         else:
             self.ui.robot_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
-        if self.datamanager_obj.joystick_obj.b_connect == 1:
+        if self.datamanager_obj.joystick_obj.joy_obj.b_connect == 1:
             self.ui.joystick_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/在线.png)}")
         else:
             self.ui.joystick_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/不在线.png)}")
@@ -920,13 +917,13 @@ class MainDialog(QMainWindow):
         else:
             leak_str = " *已漏水(%d)* " % self.datamanager_obj.tcp_server_obj.is_leak_water
         speed_str = " 速度  % d %% " % (self.datamanager_obj.tcp_server_obj.speed * 25)
-        if self.datamanager_obj.joystick_obj.b_headlight:
+        if self.datamanager_obj.joystick_obj.joy_obj.b_headlight:
             light_str = " 灯： 开 "
             self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
             self.ui.headlight_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/关.png)}")
             light_str = " 灯： 关 "
-        if self.datamanager_obj.joystick_obj.b_ledlight:
+        if self.datamanager_obj.joystick_obj.joy_obj.b_ledlight:
             light_str = " 灯： 开 "
             self.ui.led_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/开.png)}")
         else:
@@ -956,9 +953,9 @@ class MainDialog(QMainWindow):
         x_angle_str = " 俯仰角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[0]
         y_angle_str = " 横滚角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[1]
         z_angle_str = " 偏航角： %d " % self.datamanager_obj.tcp_server_obj.theta_list[2]
-        self.ui.direct_x_label.setText(x_angle_str)
-        self.ui.direct_y_label.setText(y_angle_str)
-        self.ui.direct_z_label.setText(z_angle_str)
+        self.ui.direct_x_label.setText(z_angle_str)
+        self.ui.direct_y_label.setText(x_angle_str)
+        self.ui.direct_z_label.setText(y_angle_str)
         self.ui.press_label.setText(press_str)
         self.ui.temperature_label.setText(temperature_str)
         self.ui.leak_label.setText(leak_str)
@@ -1212,8 +1209,8 @@ if __name__ == '__main__':
 
     # main_windows.resize(1920, 1080)
     # main_windows.resize(1800, 700)
-    # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/标注.png);}")  # 设置背景图
-    main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
+    main_windows.setStyleSheet("#MainWindow{border-image: url(:/icons/uuvImages/背景.png)}")  # 设置背景图 url(:/icons/uuvImages/录像停止.png)
+    # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
     # btn.clicked.connect(setting_dlg.show)
