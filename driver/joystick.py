@@ -111,86 +111,93 @@ class Jostick:
                         6：下降
                         7:左移
                         8:右移
-                        9：前进+上升
-                        10：后退+上升
-                        11：左转+上升
-                        12：右转+上升
-                        13：前进+下降
-                        14：后退+下降
-                        15：左转+下降
-                        16：右转+下降
-                        17：左前
-                        18：左后
-                        19：右前
-                        20：右后
+                        
                         """
                     # print('self.axes_0,self.axes_1,self.axes_2,self.axes_3',self.axes_0,self.axes_1,self.axes_2,self.axes_3)
-                    if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
-                            self.axes_2) < threshold and abs(
-                        self.axes_3) < threshold:
-                        self.move = 0
-                    elif abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
-                        if self.axes_2 >= threshold:
-                            self.move = 8
-                        elif self.axes_2 <= -threshold:
-                            self.move = 7
-                        if self.axes_3 >= threshold:
-                            self.move = 6
-                        elif self.axes_3 <= -threshold:
-                            self.move = 5
-                    elif abs(self.axes_2) < threshold and abs(self.axes_3) < threshold:
-                        if self.axes_0 >= threshold:
-                            self.move = 4
-                        elif self.axes_0 <= -threshold:
-                            self.move = 3
-                        if self.axes_1 >= threshold:
-                            self.move = 2
-                        elif self.axes_1 <= -threshold:
-                            self.move = 1
-                    # print('self.move', self.move)
-                    # 计算角度
-                    if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
-                            self.axes_2) < threshold and abs(
-                        self.axes_3) < threshold:
-                        self.move = 0
+                    control_method = 2  # 控制方式1单个通道控制  控制方式2两个通道控制
+                    if control_method == 1:
+                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
+                                self.axes_2) < threshold and abs(
+                            self.axes_3) < threshold:
+                            self.move = 0
+                        elif abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
+                            if self.axes_2 >= threshold:
+                                self.move = 8
+                            elif self.axes_2 <= -threshold:
+                                self.move = 7
+                            if self.axes_3 >= threshold:
+                                self.move = 6
+                            elif self.axes_3 <= -threshold:
+                                self.move = 5
+                        elif abs(self.axes_2) < threshold and abs(self.axes_3) < threshold:
+                            if self.axes_0 >= threshold:
+                                self.move = 4
+                            elif self.axes_0 <= -threshold:
+                                self.move = 3
+                            if self.axes_1 >= threshold:
+                                self.move = 2
+                            elif self.axes_1 <= -threshold:
+                                self.move = 1
                     else:
-                        # 两点在X轴的距离
-                        lenX_left = self.axes_0
-                        # 两点在Y轴距离
-                        lenY_left = self.axes_1
-                        # 两点距离
-                        lenXY_left = math.sqrt((lenX_left * lenX_left + lenY_left * lenY_left))
-                        # 计算弧度
-                        if lenXY_left<0.01:
-                            radian_left=0
-                        else:
-                            radian_left = math.acos(lenX_left / lenXY_left) * (1 if lenY_left < 0 else -1)
+                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
+                                self.axes_2) < threshold and abs(
+                            self.axes_3) < threshold:
+                            self.move = 9
+                        elif abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
+                            if self.axes_2 >= threshold:
+                                self.move = 8
+                            elif self.axes_2 <= -threshold:
+                                self.move = 7
+                            if self.axes_3 >= threshold:
+                                self.move = 6
+                            elif self.axes_3 <= -threshold:
+                                self.move = 5
                         # 计算角度
-                        angle_left = math.degrees(radian_left)
-                        # 转换角度起始点和范围
-                        angle_left = (angle_left + 360) % 360
-                        angle_left = (angle_left + 270) % 360
-                        # print('self.angle_left', angle_left)
-                        self.angle_left = int(angle_left)
-                        self.angle_left = int(angle_left)
-                        # 两点在X轴的距离
-                        lenX_right = self.axes_2
-                        # 两点在Y轴距离
-                        lenY_right = self.axes_3
-                        # 两点距离
-                        lenXY_right = math.sqrt((lenX_right * lenX_right + lenY_right * lenY_right))
-                        # 计算弧度
-                        if lenXY_right<0.01:
-                            radian_right=0
+                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
+                                self.axes_2) < threshold and abs(
+                            self.axes_3) < threshold:
+                            self.angle_left = 361
                         else:
-                            radian_right = math.acos(lenX_right / lenXY_right) * (1 if lenY_right < 0 else -1)
-                        # 计算角度
-                        angle_right = math.degrees(radian_right)
-                        # 转换角度起始点和范围
-                        angle_right = (angle_right + 360) % 360
-                        angle_right = (angle_right + 270) % 360
-                        # print('self.angle_right', angle_right)
-                        self.angle_right = int(angle_right)
+                            # 两点在X轴的距离
+                            lenX_left = self.axes_0
+                            # 两点在Y轴距离
+                            lenY_left = self.axes_1
+                            # 两点距离
+                            lenXY_left = math.sqrt((lenX_left * lenX_left + lenY_left * lenY_left))
+                            # 计算弧度
+                            if lenXY_left < 0.0001:
+                                radian_left = 0
+                            else:
+                                radian_left = math.acos(lenX_left / lenXY_left) * (1 if lenY_left < 0 else -1)
+                            # 计算角度
+                            angle_left = math.degrees(radian_left)
+                            # 转换角度起始点和范围
+                            angle_left = (angle_left + 360) % 360
+                            angle_left = (angle_left + 270) % 360
+                            # print('self.angle_left', angle_left)
+                            if angle_left == 0:
+                                angle_left = 361  # 嵌入式定义360 为左侧停止
+                            self.angle_left = int(angle_left)
+                            self.angle_left = int(angle_left)
+                            # 两点在X轴的距离
+                            lenX_right = self.axes_2
+                            # 两点在Y轴距离
+                            lenY_right = self.axes_3
+                            # 两点距离
+                            lenXY_right = math.sqrt((lenX_right * lenX_right + lenY_right * lenY_right))
+                            # 计算弧度
+                            if lenXY_right < 0.01:
+                                radian_right = 0
+                            else:
+                                radian_right = math.acos(lenX_right / lenXY_right) * (1 if lenY_right < 0 else -1)
+                            # 计算角度
+                            angle_right = math.degrees(radian_right)
+                            # 转换角度起始点和范围
+                            angle_right = (angle_right + 360) % 360
+                            angle_right = (angle_right + 270) % 360
+                            # print('self.angle_right', angle_right)
+                            self.angle_right = int(angle_right)
+                        print('m%d,%dz' % (self.angle_left, self.move))
 
                     buttons = self.joystick.get_numbuttons()
                     button_input = [self.joystick.get_button(i) for i in range(buttons)]
@@ -275,6 +282,7 @@ class Jostick:
 class JoyManager:
     def __init__(self):
         pass
+
     def get_data_thread(self):
         self.joy_obj = Jostick()
         self.joy_obj.move = 0
@@ -303,7 +311,7 @@ class JoyManager:
             if config.need_restart_joy:
                 # print('restart', '  is init', pygame.joystick.get_init())
                 self.joy_obj.move = 0
-                #突出摇杆此步骤必须要有
+                # 突出摇杆此步骤必须要有
                 pygame.joystick.quit()
                 # print('  is init', pygame.joystick.get_init())
                 # 重新启动检测流程

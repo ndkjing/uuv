@@ -45,10 +45,19 @@ tcp_server_port = 5566
 only_joystick = 1  # 是否只是用手柄不适用键盘  0 都是用  1 只是用手柄
 # 1 qt tcp 2 tcp
 tcp_server_type = 1
+
+
 # 摄像头地址取决于设备 测试和实际地址不同
 if target_server_type == 4:
-    front_video_src = 'rtsp://192.168.2.5:8554/0'
-    back_video_src = 'rtsp://192.168.2.6:8554/0'
+    out_video=0  # 是否是内置
+    if out_video:
+        front_video_src = 'rtsp://192.168.2.5:8554/0'
+        back_video_src = 'rtsp://192.168.2.6:8554/0'
+    # 工业水下机器人内置摄像头
+    else:
+        front_video_src = 'rtsp://192.168.2.5:554/ch01.264'
+        back_video_src = 'rtsp://192.168.2.6:8554/0'
+
 # elif target_server_type == 1:
 #     # front_video_src =0
 #     front_video_src ="https://rtmp01open.ys7.com:9188/v3/openlive/F77671789_1_2.flv?expire=1670918205&id=392344446919000064&t=aa950e8c6b324d279086e1e552b5fc325bfd7749888a1b36e479206ef3011e0e&ev=100"

@@ -153,6 +153,7 @@ class TcpServerQt(QWidget):
             if self.pre_port is None:
                 self.pre_port = peer_port
             elif peer_port - self.pre_port == 1:
+                    # or peer_port - self.pre_port == 1:  self.pre_port is None:
                 print('port2', peer_port)
                 return
             sock.readyRead.connect(lambda: self.read_data_slot(sock))
@@ -165,8 +166,8 @@ class TcpServerQt(QWidget):
 
     def read_data_slot(self, sock):
         while sock.bytesAvailable():
-            datagram = sock.read(sock.bytesAvailable())
             try:
+                datagram = sock.read(sock.bytesAvailable())
                 message = datagram.decode()
                 # print('socket receive data', message)
                 message = str(message)
@@ -227,6 +228,7 @@ class TcpServerQt(QWidget):
                 #       self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
             except Exception as e:
                 print('tcp data error', e)
+                continue
             # answer = self.get_answer(message).replace('{br}', '\n')
             # new_datagram = answer.encode()
 
@@ -249,7 +251,7 @@ class TcpServerQt(QWidget):
         print('sock==self.sock', sock == self.sock)
         self.sock = None
         self.pre_port = None
-        self.b_connect=0
+        self.b_connect = 0
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
