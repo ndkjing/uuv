@@ -49,8 +49,10 @@ class TcpServer:
         self.press = 0
         # 是否漏水
         self.is_leak_water = 0
-        # 灯
-        self.is_big_light = 0
+        # 大灯
+        self.is_head_light = 0
+        # led灯
+        self.is_led_light = 0
         # 声呐
         self.is_sonar = 0
         # 摄像头角度
@@ -108,7 +110,7 @@ class TcpServerQt(QWidget):
         self.bind_ip = config.tcp_server_ip  # 监听所有可用的接口
         self.bind_port = config.tcp_server_port  # 非特权端口号都可以使用
         self.server = QTcpServer(self)
-        if not self.server.listen(QHostAddress.AnyIPv4, config.tcp_server_port):
+        if not self.server.listen(QHostAddress.Any, config.tcp_server_port):
             self.browser.append(self.server.errorString())
         self.server.newConnection.connect(self.new_socket_slot)
         self.sock = None
@@ -125,8 +127,10 @@ class TcpServerQt(QWidget):
         self.press = 0
         # 是否漏水
         self.is_leak_water = 0
-        # 灯
-        self.is_big_light = 0
+        # 大灯
+        self.is_headlight = 0
+        # led灯
+        self.is_ledlight = 0
         # 声呐
         self.is_sonar = 0
         # 摄像头角度
@@ -137,26 +141,37 @@ class TcpServerQt(QWidget):
         self.speed = 2
         # 水下机器人运动方向
         self.move = 0
+        self.pre_port = None
 
     def new_socket_slot(self):
-        sock = self.server.nextPendingConnection()
-        peer_address = sock.peerAddress().toString()
-        peer_port = sock.peerPort()
-        news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
-        sock.readyRead.connect(lambda: self.read_data_slot(sock))
-        sock.disconnected.connect(lambda: self.disconnected_slot(sock))
-        self.sock = sock
-        self.b_connect = 1
+        try:
+            sock = self.server.nextPendingConnection()
+            peer_address = sock.peerAddress().toString()
+            peer_port = sock.peerPort()
+            news = 'Connected with address {}, port {}'.format(peer_address, str(peer_port))
+            print('Connected with address {}, port {}'.format(peer_address, str(peer_port)))
+            if self.pre_port is None:
+                self.pre_port = peer_port
+            elif peer_port - self.pre_port == 1:
+                    # or peer_port - self.pre_port == 1:  self.pre_port is None:
+                print('port2', peer_port)
+                return
+            sock.readyRead.connect(lambda: self.read_data_slot(sock))
+            sock.disconnected.connect(lambda: self.disconnected_slot(sock))
+            print('sock.isOpen()', sock.isOpen())
+            self.sock = sock
+            self.b_connect = 1
+        except Exception as e:
+            print('error', e)
 
     def read_data_slot(self, sock):
         while sock.bytesAvailable():
-            datagram = sock.read(sock.bytesAvailable())
             try:
+                datagram = sock.read(sock.bytesAvailable())
                 message = datagram.decode()
-                print('socket receive data', message)
+                # print('socket receive data', message)
                 message = str(message)
                 message = message.strip()
-
                 press_find = re.findall(r'\"pressure\":(.*?),\"', message)
                 if len(press_find) > 0:
                     self.press = float(press_find[0])
@@ -167,7 +182,7 @@ class TcpServerQt(QWidget):
 
                 light_find = re.findall(r'\"light\":(.*?),\"', message)
                 if len(light_find) > 0:
-                    self.is_big_light = int(light_find[0])
+                    self.is_headlight = int(light_find[0])
 
                 sonar_find = re.findall(r'\"sonar\":(.*?),\"', message)
                 if len(sonar_find) > 0:
@@ -208,10 +223,12 @@ class TcpServerQt(QWidget):
                 move_find = re.findall(r'\"move\":(.*?)}', message)
                 if len(move_find) > 0:
                     self.move = int(move_find[0])
-                print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_big_light,
-                      self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
+                # print('self.move',self.move)
+                # print('self.press', self.deep, self.temperature, self.press, self.is_leak_water, self.is_headlight,
+                #       self.is_sonar, self.camera_angle_pwm, self.arm_pwm, self.speed, self.move)
             except Exception as e:
                 print('tcp data error', e)
+                continue
             # answer = self.get_answer(message).replace('{br}', '\n')
             # new_datagram = answer.encode()
 
@@ -229,7 +246,12 @@ class TcpServerQt(QWidget):
         peer_address = sock.peerAddress().toString()
         peer_port = sock.peerPort()
         news = 'Disconnected with address {}, port {}'.format(peer_address, str(peer_port))
+        print(news)
         sock.close()
+        print('sock==self.sock', sock == self.sock)
+        self.sock = None
+        self.pre_port = None
+        self.b_connect = 0
 
     def keyPressEvent(self, keyevent):
         if keyevent.text() in ['w', 'W']:
@@ -238,5 +260,8 @@ class TcpServerQt(QWidget):
 
 
 if __name__ == '__main__':
-    obj = TcpServer()
-    obj.start_server()
+    obj = TcpServerQt()
+    while True:
+        time.sleep(1)
+        print('1111')
+    # obj.start_server()

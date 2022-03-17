@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1920</width>
-    <height>1080</height>
+    <width>1800</width>
+    <height>745</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="layoutDirection">
     <enum>Qt::RightToLeft</enum>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,10">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1,17">
     <property name="spacing">
      <number>0</number>
     </property>
@@ -55,42 +55,44 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="arm_label">
+        <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>机械臂</string>
-         </property>
-         <property name="margin">
-          <number>2</number>
+          <string>  </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="camera_steer_label">
+        <widget class="QPushButton" name="setting_btn">
          <property name="text">
-          <string>舵机</string>
-         </property>
-         <property name="margin">
-          <number>2</number>
+          <string>设置</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="sonar_label">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>声呐</string>
-         </property>
-         <property name="margin">
-          <number>2</number>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="light_label">
+        <widget class="QLabel" name="setting_label">
          <property name="text">
-          <string>灯：</string>
+          <string> 设置 </string>
          </property>
-         <property name="margin">
-          <number>2</number>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="switch_video_button">
+         <property name="text">
+          <string>切换</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="switch_video_label">
+         <property name="text">
+          <string> 切换摄像头 </string>
          </property>
         </widget>
        </item>
@@ -128,30 +130,37 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="leak_label">
+        <widget class="QLabel" name="joystick_text_label">
          <property name="text">
-          <string>漏水</string>
+          <string>  手柄  </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="motor_lock_label">
+        <widget class="QPushButton" name="joystick_img_btn">
          <property name="text">
-          <string>解锁：</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="speed_label">
+        <widget class="QLabel" name="robot_text_label">
          <property name="text">
-          <string>动力：</string>
+          <string>  主机  </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="pressure_label">
+        <widget class="QPushButton" name="robot_img_btn">
          <property name="text">
-          <string>仓压：</string>
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string> </string>
          </property>
         </widget>
        </item>
@@ -180,16 +189,9 @@
         <number>0</number>
        </property>
        <item>
-        <widget class="QPushButton" name="setting_btn">
+        <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>设置</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="init_motor_btn">
-         <property name="text">
-          <string>解锁</string>
+          <string>  </string>
          </property>
         </widget>
        </item>
@@ -201,16 +203,105 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="switch_video_button">
+        <widget class="QLabel" name="sonar_text_label">
          <property name="text">
-          <string>切换</string>
+          <string>   声呐 </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="show_video_button">
+        <widget class="QPushButton" name="back_camera_video">
          <property name="text">
-          <string>显示视频</string>
+          <string>录像</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="back_camera_cap">
+         <property name="text">
+          <string>截图</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="back_label">
+         <property name="text">
+          <string> 后摄 </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="front_camera_video">
+         <property name="text">
+          <string>录像</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="front_camera_cap">
+         <property name="text">
+          <string>截图</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="front_label">
+         <property name="text">
+          <string>前摄 </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="v_label">
+         <property name="text">
+          <string> 电压: </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="speed_label">
+         <property name="text">
+          <string> 动力 </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="press_label">
+         <property name="text">
+          <string> 仓压 </string>
          </property>
         </widget>
        </item>
@@ -235,12 +326,16 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="joystick_label">
+        <widget class="QLabel" name="leak_label">
          <property name="text">
-          <string>遥控</string>
+          <string> 漏水 </string>
          </property>
-         <property name="margin">
-          <number>3</number>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="mode_img_btn">
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>
@@ -250,7 +345,7 @@
           <number>3</number>
          </property>
          <property name="text">
-          <string>模式：</string>
+          <string> 模式 </string>
          </property>
          <property name="margin">
           <number>2</number>
@@ -258,57 +353,58 @@
         </widget>
        </item>
        <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="back_camera_video">
+        <widget class="QPushButton" name="steer_img_btn">
          <property name="text">
-          <string>录像</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="back_camera_cap">
+        <widget class="QLabel" name="steer_label">
          <property name="text">
-          <string>截图</string>
+          <string> 云台 </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="back_label">
+        <widget class="QPushButton" name="arm_img_btn">
          <property name="text">
-          <string>后摄</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="front_camera_video">
+        <widget class="QLabel" name="arm_label">
          <property name="text">
-          <string>录像</string>
+          <string> 机械臂 </string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="front_camera_cap">
+        <widget class="QPushButton" name="led_img_btn">
          <property name="text">
-          <string>截图</string>
+          <string/>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="front_label">
+        <widget class="QLabel" name="led_label">
          <property name="text">
-          <string>前摄</string>
+          <string> LED </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="headlight_img_btn">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="headlight_label">
+         <property name="text">
+          <string> 大灯 </string>
          </property>
         </widget>
        </item>
@@ -341,7 +437,7 @@
          <property name="title">
           <string/>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1">
+         <layout class="QVBoxLayout" name="verticalLayout_2" stretch="3,7">
           <property name="spacing">
            <number>0</number>
           </property>
@@ -381,7 +477,10 @@
              <item>
               <widget class="QLabel" name="back_video_label">
                <property name="text">
-                <string>后摄</string>
+                <string/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
                </property>
               </widget>
              </item>
@@ -393,7 +492,7 @@
             <property name="title">
              <string/>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,1">
+            <layout class="QVBoxLayout" name="verticalLayout_3" stretch="2,3">
              <property name="spacing">
               <number>0</number>
              </property>
@@ -433,14 +532,14 @@
                 <item>
                  <widget class="QLabel" name="angle_y_label">
                   <property name="text">
-                   <string>横滚</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
                 <item>
                  <widget class="QLabel" name="angle_z_label">
                   <property name="text">
-                   <string>偏航</string>
+                   <string/>
                   </property>
                  </widget>
                 </item>
@@ -452,7 +551,7 @@
                <property name="title">
                 <string/>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2,2,2">
+               <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,2">
                 <property name="spacing">
                  <number>0</number>
                 </property>
@@ -473,7 +572,7 @@
                   <property name="title">
                    <string/>
                   </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_5">
+                  <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,1">
                    <property name="spacing">
                     <number>0</number>
                    </property>
@@ -490,75 +589,42 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QLabel" name="slider_label">
+                    <widget class="QGroupBox" name="groupBox_11">
+                     <property name="title">
+                      <string/>
+                     </property>
+                     <layout class="QHBoxLayout" name="horizontalLayout_8">
+                      <item>
+                       <widget class="QLabel" name="direct_z_label">
+                        <property name="text">
+                         <string>偏航角:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="direct_y_label">
+                        <property name="text">
+                         <string>横滚角:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="direct_x_label">
+                        <property name="text">
+                         <string>俯仰角:</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="auto_label">
                      <property name="text">
-                      <string>滑动调节条</string>
+                      <string>自动控制</string>
                      </property>
                      <property name="alignment">
                       <set>Qt::AlignCenter</set>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="groupBox_12">
-                  <property name="title">
-                   <string/>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_7">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item>
-                    <widget class="QRadioButton" name="speed_radio_button">
-                     <property name="text">
-                      <string>使能</string>
-                     </property>
-                     <property name="checked">
-                      <bool>true</bool>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QSlider" name="speed_slider">
-                     <property name="toolTipDuration">
-                      <number>1</number>
-                     </property>
-                     <property name="minimum">
-                      <number>1</number>
-                     </property>
-                     <property name="maximum">
-                      <number>4</number>
-                     </property>
-                     <property name="singleStep">
-                      <number>1</number>
-                     </property>
-                     <property name="value">
-                      <number>4</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="speed_slider_label">
-                     <property name="text">
-                      <string>油门：</string>
                      </property>
                     </widget>
                    </item>
@@ -570,7 +636,7 @@
                   <property name="title">
                    <string/>
                   </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_8">
+                  <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,1">
                    <property name="spacing">
                     <number>0</number>
                    </property>
@@ -587,72 +653,87 @@
                     <number>0</number>
                    </property>
                    <item>
-                    <widget class="QRadioButton" name="deep_radio_button">
-                     <property name="text">
-                      <string>使能</string>
+                    <widget class="QGroupBox" name="groupBox_10">
+                     <property name="title">
+                      <string/>
                      </property>
+                     <layout class="QHBoxLayout" name="horizontalLayout_6">
+                      <item>
+                       <widget class="QPushButton" name="move_direction_btn">
+                        <property name="text">
+                         <string>定向航行</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="keep_direction_btn">
+                        <property name="text">
+                         <string>定向保持</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="auto_direction_label">
+                        <property name="text">
+                         <string>TextLabel</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
                     </widget>
                    </item>
                    <item>
-                    <widget class="QSlider" name="deep_slider">
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                    <widget class="QGroupBox" name="groupBox_8">
+                     <property name="title">
+                      <string/>
                      </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="deep_slider_label">
-                     <property name="text">
-                      <string>深度：</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QGroupBox" name="groupBox_14">
-                  <property name="title">
-                   <string/>
-                  </property>
-                  <layout class="QHBoxLayout" name="horizontalLayout_9">
-                   <property name="spacing">
-                    <number>0</number>
-                   </property>
-                   <property name="leftMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="topMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="rightMargin">
-                    <number>0</number>
-                   </property>
-                   <property name="bottomMargin">
-                    <number>0</number>
-                   </property>
-                   <item>
-                    <widget class="QRadioButton" name="angle_radio_button">
-                     <property name="text">
-                      <string>使能</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QSlider" name="angle_slider">
-                     <property name="maximum">
-                      <number>360</number>
-                     </property>
-                     <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLabel" name="angle_slider_label">
-                     <property name="text">
-                      <string>角度：</string>
-                     </property>
+                     <layout class="QHBoxLayout" name="horizontalLayout_7">
+                      <item>
+                       <widget class="QPushButton" name="move_deep_btn">
+                        <property name="text">
+                         <string>定深航行</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="keep_deep_btn">
+                        <property name="text">
+                         <string>定深保持</string>
+                        </property>
+                        <property name="checkable">
+                         <bool>true</bool>
+                        </property>
+                        <property name="autoExclusive">
+                         <bool>false</bool>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QLabel" name="auto_deep_label">
+                        <property name="text">
+                         <string>TextLabel</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
                     </widget>
                    </item>
                   </layout>
@@ -691,7 +772,10 @@
           <item>
            <widget class="QLabel" name="front_video_label">
             <property name="text">
-             <string>前摄</string>
+             <string/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
             </property>
            </widget>
           </item>
@@ -708,7 +792,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1920</width>
+     <width>1800</width>
      <height>23</height>
     </rect>
    </property>
@@ -722,6 +806,7 @@
  </widget>
  <resources>
   <include location="res.qrc"/>
+  <include location="my_res.qrc"/>
  </resources>
  <connections/>
 </ui>

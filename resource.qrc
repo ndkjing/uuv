@@ -1,7 +1,29 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-  <qresource prefix="icon">
-    <file alias="penguin.png">statics/resource/icon/arrow-000.png</file>
-    <file alias="penguin.png">statics/resource/icon/arrow-180.png</file>
+  <qresource prefix="icons">
+    <file >uuvImages/前进.png</file>
+    <file >uuvImages/后退.png</file>
+    <file >uuvImages/上升.png</file>
+    <file >uuvImages/下降.png</file>
+    <file >uuvImages/左转.png</file>
+    <file >uuvImages/右转.png</file>
+    <file >uuvImages/左移.png</file>
+    <file >uuvImages/右移.png</file>
+    <file >uuvImages/停止.png</file>
+    <file >uuvImages/停止.png</file>
+    <file >uuvImages/在线.png</file>
+    <file >uuvImages/不在线.png</file>
+    <file >uuvImages/云台上.png</file>
+    <file >uuvImages/云台下.png</file>
+    <file >uuvImages/云台停止.png</file>
+    <file >uuvImages/拍照.png</file>
+    <file >uuvImages/录像开始.png</file>
+    <file >uuvImages/录像停止.png</file>
+    <file >uuvImages/开.png</file>
+    <file >uuvImages/关.png</file>
+    <file >uuvImages/背景.png</file>
+    <file >uuvImages/切换.png</file>
+    <file >uuvImages/设置.png</file>
+    <file >uuvImages/logo.png</file>
   </qresource>
 </RCC>

@@ -342,7 +342,7 @@
      <property name="title">
       <string/>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1">
+     <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,1,1">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -358,6 +358,46 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
+      <item>
+       <widget class="QGroupBox" name="groupBox_19">
+        <property name="title">
+         <string>GroupBox</string>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>w:前进 a 左转 s 后退  d 右转   z 上浮 c 下沉   q 左移 e 右移  x停止</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>摄像头舵机  y 上仰  h 停止    n 下俯</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>机械臂  u 打开 j 停止    m 关闭</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>r 自稳   g 声呐继电器   t  pwm灯光</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
       <item>
        <widget class="QGroupBox" name="groupBox_6">
         <property name="title">
