@@ -689,6 +689,22 @@ class MainDialog(QMainWindow):
             else:
                 self.frame_text_dict['text3'] = []
 
+#     def update_slider(self):
+#         speed_slider_value = self.ui.speed_slider.maximum() - self.ui.speed_slider.value() + 1
+#         deep_slider_value = self.ui.deep_slider.maximum() - self.ui.deep_slider.value()
+#         angle_slider_value = self.ui.angle_slider.maximum() - self.ui.angle_slider.value()
+#         self.ui.speed_slider_label.setText(" 油门: %s " % speed_slider_value)
+#         self.ui.deep_slider_label.setText(" 深度: %s " % deep_slider_value)
+#         self.ui.angle_slider_label.setText(" 角度: %s " % angle_slider_value)
+#         if self.ui.speed_radio_button.isChecked():
+#             self.datamanager_obj.speed_slider_value = speed_slider_value
+#         if self.ui.deep_radio_button.isChecked():
+#             self.datamanager_obj.deep_slider_value = deep_slider_value
+#         if self.ui.angle_radio_button.isChecked():
+#             self.datamanager_obj.angle_slider_value = angle_slider_value
+#         # print('min max value', self.ui.speed_slider.maximum(), self.ui.speed_slider.minimum(),
+#         #       self.ui.speed_slider.value())
+
     # 更新pid参数
     def update_pid(self, value):
         sender = self.sender()
