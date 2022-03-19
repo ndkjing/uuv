@@ -968,7 +968,20 @@ class MainDialog(QMainWindow):
         # 设置运动模式提示停止
         control_info_dict = {0: '停止', 1: '前进', 2: '后退', 3: '左转', 4: '右转', 5: '上升', 6: '下降', 7: '左移',
                              8: '右移'}
-        mode_str = control_info_dict[self.datamanager_obj.tcp_server_obj.move]
+        info=0
+        if 0<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<45 or 315<self.datamanager_obj.joystick_obj.joy_obj.angle_left<360:
+            info=1
+        elif 45<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<135:
+            info = 3
+        elif 135<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<225:
+            info = 2
+        elif 225<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<315:
+            info = 4
+        else:
+            info=0
+        if self.datamanager_obj.joystick_obj.joy_obj.move!=9:
+            info=self.datamanager_obj.joystick_obj.joy_obj.move
+        mode_str = control_info_dict[info]
         self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}" % mode_str)
         self.ui.auto_deep_label.setText(" 深度: %f " % 1)
         self.ui.auto_direction_label.setText(" 航向: %f" % 1)

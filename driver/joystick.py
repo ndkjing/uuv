@@ -17,7 +17,7 @@ def Singleton(cls):
     return _singleton
 
 
-threshold = 0.35
+threshold = 0.2
 # need_restart=False
 import config
 
@@ -139,11 +139,9 @@ class Jostick:
                             elif self.axes_1 <= -threshold:
                                 self.move = 1
                     else:
-                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
-                                self.axes_2) < threshold and abs(
-                            self.axes_3) < threshold:
+                        if abs(self.axes_2) < threshold and abs(self.axes_3) < threshold:
                             self.move = 9
-                        elif abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
+                        else:
                             if self.axes_2 >= threshold:
                                 self.move = 8
                             elif self.axes_2 <= -threshold:
@@ -153,9 +151,7 @@ class Jostick:
                             elif self.axes_3 <= -threshold:
                                 self.move = 5
                         # 计算角度
-                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
-                                self.axes_2) < threshold and abs(
-                            self.axes_3) < threshold:
+                        if abs(self.axes_0) < 0.2 and abs(self.axes_1) < 0.2:
                             self.angle_left = 361
                         else:
                             # 两点在X轴的距离
@@ -166,6 +162,7 @@ class Jostick:
                             lenXY_left = math.sqrt((lenX_left * lenX_left + lenY_left * lenY_left))
                             # 计算弧度
                             if lenXY_left < 0.0001:
+                                print('lenXY_left',lenXY_left)
                                 radian_left = 0
                             else:
                                 radian_left = math.acos(lenX_left / lenXY_left) * (1 if lenY_left < 0 else -1)
@@ -176,7 +173,7 @@ class Jostick:
                             angle_left = (angle_left + 270) % 360
                             # print('self.angle_left', angle_left)
                             if angle_left == 0:
-                                angle_left = 361  # 嵌入式定义360 为左侧停止
+                                angle_left = 1  # 嵌入式定义360 为左侧停止
                             self.angle_left = int(angle_left)
                             self.angle_left = int(angle_left)
                             # 两点在X轴的距离

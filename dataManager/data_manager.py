@@ -97,7 +97,7 @@ class DataManager(object):
             #     move_info = 'move%sz' % joy_move
             #     speed_info = 'speed%sz' % joy_speed
             if config.only_joystick:
-                move_info = 'move%sz' % self.joystick_obj.joy_obj.move
+                move_info = 'move%s,%sz' % (self.joystick_obj.joy_obj.angle_left,self.joystick_obj.joy_obj.move)
                 speed_info = 'speed%sz' % self.joystick_obj.joy_obj.speed
                 camera_info = 'camera%sz' % self.joystick_obj.joy_obj.camera_steer
                 light_info = 'light%sz' % self.joystick_obj.joy_obj.b_ledlight
@@ -108,7 +108,7 @@ class DataManager(object):
                 head_info = 'head%sz' % self.joystick_obj.joy_obj.b_headlight
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             else:
-                move_info = 'move%sz' % self.move
+                move_info = 'move%sz' % (self.self.move)
                 speed_info = 'speed%sz' % self.speed_slider_value
                 camera_info = 'camera%sz' % self.camera
                 light_info = 'light%sz' % self.light
