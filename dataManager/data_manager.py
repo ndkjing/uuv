@@ -7,6 +7,7 @@ from common import tcpServer
 from driver import joystick
 import config
 import threading
+import onvif_control
 
 
 def Singleton(cls):
@@ -50,6 +51,15 @@ class DataManager(object):
         self.b_move_deep = 0
         self.b_keep_direction = 0
         self.b_move_direction = 0
+        self.info_inter = 0.005
+        self.deep_mode = 0  # 自动定深模式
+        self.onvif_obj = onvif_control.Onvif_hik(config.camera_ip, 'admin', 'xxl123456')
+        self.b_camera_connect = False  # 摄像头onvif是否连接成功
+        print('connect 摄像头')
+        # self.onvif_obj.content_cam()
+        self.b_camera_connect = self.onvif_obj.content_cam()
+        self.zoom_val = 0  # 记录上次使用缩放速度 用来持续按下时加速
+        self.brightness_val = 50  # 记录使用亮度
 
     def init_run(self):
         t1 = threading.Thread(target=self.tcp_server_obj.wait_connect)
@@ -97,14 +107,21 @@ class DataManager(object):
             #     move_info = 'move%sz' % joy_move
             #     speed_info = 'speed%sz' % joy_speed
             if config.only_joystick:
-                move_info = 'move%s,%sz' % (self.joystick_obj.joy_obj.angle_left,self.joystick_obj.joy_obj.move)
+                if config.control_method == 2:
+                    move_info = 'move%s,%sz' % (self.joystick_obj.joy_obj.angle_left, self.joystick_obj.joy_obj.move)
+                else:
+                    move_info = 'move%sz' % self.joystick_obj.joy_obj.move
                 speed_info = 'speed%sz' % self.joystick_obj.joy_obj.speed
                 camera_info = 'camera%sz' % self.joystick_obj.joy_obj.camera_steer
                 light_info = 'light%sz' % self.joystick_obj.joy_obj.b_ledlight
                 sonar_info = 'sonar%sz' % self.joystick_obj.joy_obj.b_sonar
                 arm_info = 'arm%sz' % self.joystick_obj.joy_obj.arm
                 pid_info = 'pid%s,%s,%sz' % (self.pid[0], self.pid[1], self.pid[2])
-                mode_info = 'mode%sz' % self.joystick_obj.joy_obj.mode
+                if self.deep_mode != 0:
+                    mode_info = 'mode%sz' % self.deep_mode
+                else:
+                    mode_info = 'mode%sz' % self.joystick_obj.joy_obj.mode
+                print(time.time(), '运动信息:', move_info, '自动消息', mode_info)
                 head_info = 'head%sz' % self.joystick_obj.joy_obj.b_headlight
                 backup_pwm_info = 'backupPwm%sz' % self.backup_pwm
             else:
@@ -141,7 +158,7 @@ class DataManager(object):
                         #     continue
                         # print('send data', data)
                         self.tcp_server_obj.write_data(data)
-                        time.sleep(0.005)
+                        time.sleep(self.info_inter)
                 else:
                     pass
             except ConnectionResetError as e:
@@ -149,6 +166,51 @@ class DataManager(object):
                 self.tcp_server_obj.client.disconnected_slot()
             if b_once:
                 return
+
+    def send_camera_data(self, b_once=False):
+        # 发送摄像头信息
+        b_camera = 1
+        if b_camera:
+            if self.joystick_obj.joy_obj.numhats_input[1] == 1:  # 组合键1被按下
+                # 判断是否要摄像头 变倍  持续按下会越来越快
+                if self.joystick_obj.joy_obj.buttons_input[4] == 1:
+                    if self.zoom_val < 0:
+                        self.zoom_val = 0
+                    self.zoom_val += 0.4
+                    print('self.zoom_val', self.zoom_val)
+                    self.onvif_obj.zoom(self.zoom_val)
+                if self.joystick_obj.joy_obj.buttons_input[6] == 1:
+                    if self.zoom_val > 0:
+                        self.zoom_val = 0
+                    self.zoom_val -= 0.4
+                    print('self.zoom_val', self.zoom_val)
+                    self.onvif_obj.zoom(self.zoom_val)
+                # 判断是否要摄像头 变焦
+                focus_val = 0
+                if self.joystick_obj.joy_obj.buttons_input[5] == 1:
+                    focus_val = -0.01
+                if self.joystick_obj.joy_obj.buttons_input[7] == 1:
+                    focus_val = 0.01
+                if focus_val != 0:
+                    print('focus_val', focus_val)
+                    self.onvif_obj.continue_move_image(focus_val)
+            else:
+                self.zoom_val = 0
+            if self.joystick_obj.joy_obj.numhats_input[0] == -1:  # 组合键2被按下
+                if self.joystick_obj.joy_obj.buttons_input[4] == 1:
+                    self.brightness_val += 3
+                    if self.brightness_val > 99:
+                        self.brightness_val = 99
+                    # print('self.brightness_val', self.brightness_val)
+                    self.onvif_obj.set_imaging(self.brightness_val)
+                if self.joystick_obj.joy_obj.buttons_input[6] == 1:
+                    self.brightness_val -= 2
+                    if self.brightness_val < 1:
+                        self.brightness_val = 1
+                    # print('self.brightness_val', self.brightness_val)
+                    self.onvif_obj.set_imaging(self.brightness_val)
+        if b_once:
+            return
 
     # 接受tcp数据
     def get_tcp_data(self):

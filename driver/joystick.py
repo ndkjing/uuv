@@ -1,9 +1,8 @@
 import math
-
 import pygame
-import threading
 import time
 from collections import deque
+import config
 
 
 def Singleton(cls):
@@ -18,8 +17,9 @@ def Singleton(cls):
 
 
 threshold = 0.2
+
+
 # need_restart=False
-import config
 
 
 # @Singleton
@@ -50,6 +50,9 @@ class Jostick:
         self.reconnect = False
         self.angle_left = 0  # 左侧摇杆角度
         self.angle_right = 0  # 右侧摇杆角度
+        self.numhats_input = None  # 按键输入原始值
+        self.axes = None
+        self.buttons_input = None
 
     def init_joystick(self):
         # 初始化
@@ -111,11 +114,10 @@ class Jostick:
                         6：下降
                         7:左移
                         8:右移
-                        
                         """
                     # print('self.axes_0,self.axes_1,self.axes_2,self.axes_3',self.axes_0,self.axes_1,self.axes_2,self.axes_3)
-                    control_method = 2  # 控制方式1单个通道控制  控制方式2两个通道控制
-                    if control_method == 1:
+                    self.axes = [self.axes_0, self.axes_1, self.axes_2, self.axes_3]
+                    if config.control_method == 1:
                         if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold and abs(
                                 self.axes_2) < threshold and abs(
                             self.axes_3) < threshold:
@@ -151,7 +153,7 @@ class Jostick:
                             elif self.axes_3 <= -threshold:
                                 self.move = 5
                         # 计算角度
-                        if abs(self.axes_0) < 0.2 and abs(self.axes_1) < 0.2:
+                        if abs(self.axes_0) < threshold and abs(self.axes_1) < threshold:
                             self.angle_left = 361
                         else:
                             # 两点在X轴的距离
@@ -162,7 +164,6 @@ class Jostick:
                             lenXY_left = math.sqrt((lenX_left * lenX_left + lenY_left * lenY_left))
                             # 计算弧度
                             if lenXY_left < 0.0001:
-                                print('lenXY_left',lenXY_left)
                                 radian_left = 0
                             else:
                                 radian_left = math.acos(lenX_left / lenXY_left) * (1 if lenY_left < 0 else -1)
@@ -194,10 +195,10 @@ class Jostick:
                             angle_right = (angle_right + 270) % 360
                             # print('self.angle_right', angle_right)
                             self.angle_right = int(angle_right)
-                        print('m%d,%dz' % (self.angle_left, self.move))
-
+                        # print('m%d,%dz' % (self.angle_left, self.move))
                     buttons = self.joystick.get_numbuttons()
                     button_input = [self.joystick.get_button(i) for i in range(buttons)]
+                    self.buttons_input = button_input
                     # print('button_input', button_input)
                     # pwm led灯
                     if button_input[0] == 1 and button_input[8] == 1:
@@ -236,15 +237,24 @@ class Jostick:
                     #       self.b_ledlight, self.b_sonar, self.b_headlight, self.mode, self.arm, self.camera_steer)
                     # 获取键帽输入
                     numhats = self.joystick.get_numhats()
+                    numhats_input = [self.joystick.get_hat(i) for i in range(numhats)]
+                    self.numhats_input = numhats_input[0]
+                    # print('numhats_input',numhats_input,numhats)
                     for i in range(numhats):
-                        if self.joystick.get_hat(i)[1] == 1:
-                            self.speed = 1
-                        elif self.joystick.get_hat(i)[1] == -1:
-                            self.speed = 3
-                        elif self.joystick.get_hat(i)[0] == 1:
-                            self.speed = 2
-                        elif self.joystick.get_hat(i)[0] == -1:
-                            self.speed = 4
+                        # if self.joystick.get_hat(i)[1] == 1:
+                        #     self.speed = 1
+                        # elif self.joystick.get_hat(i)[1] == -1:
+                        #     self.speed = 3
+                        # elif self.joystick.get_hat(i)[0] == 1:
+                        #     self.speed = 2
+                        # elif self.joystick.get_hat(i)[0] == -1:
+                        #     self.speed = 4
+                        # 改为循环累加模式
+                        if self.joystick.get_hat(i)[1] == -1:
+                            time.sleep(0.17)
+                            self.speed += 1
+                            if self.speed > 4:
+                                self.speed = 1
                     # print('self.speed', self.speed)
                     self.clock.tick(20)
                     # time.sleep(0.001)
@@ -308,7 +318,7 @@ class JoyManager:
             if config.need_restart_joy:
                 # print('restart', '  is init', pygame.joystick.get_init())
                 self.joy_obj.move = 0
-                # 突出摇杆此步骤必须要有
+                # 退出摇杆此步骤必须要有
                 pygame.joystick.quit()
                 # print('  is init', pygame.joystick.get_init())
                 # 重新启动检测流程

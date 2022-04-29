@@ -2,7 +2,7 @@ import socket
 import json
 import re
 import time
-import requests
+# import requests
 from PyQt5.QtNetwork import QTcpServer, QHostAddress
 from PyQt5.QtWidgets import QApplication, QWidget, QTextBrowser, QVBoxLayout
 import threading
@@ -236,11 +236,11 @@ class TcpServerQt(QWidget):
         if self.sock:
             self.sock.write(new_datagram.encode())
 
-    def get_answer(self, message):
-        payload = {'key': 'free', 'appid': '0', 'msg': message}
-        r = requests.get("http://api.qingyunke.com/api.php?", params=payload)
-        answer = json.loads(r.text)['content']
-        return answer
+    # def get_answer(self, message):
+    #     payload = {'key': 'free', 'appid': '0', 'msg': message}
+    #     r = requests.get("http://api.qingyunke.com/api.php?", params=payload)
+    #     answer = json.loads(r.text)['content']
+    #     return answer
 
     def disconnected_slot(self, sock):
         peer_address = sock.peerAddress().toString()

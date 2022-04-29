@@ -3,9 +3,10 @@ import copy
 import sys
 import os
 import time
-
-import pyqtgraph
-
+import json
+# import pyqtgraph
+import re
+import subprocess
 from ui import main_ui, setting_ui, angle
 from PyQt5.QtWidgets import QDialog, QMainWindow
 from PyQt5.QtCore import *
@@ -17,14 +18,13 @@ import cv2
 from PIL import ImageFont, ImageDraw, Image
 # from qt_material import apply_stylesheet
 import numpy as np
-import math
-
+from onvif import *
 from dataManager import data_manager
 from common import draw_angle
 import config
 from storage import save_data
 import resource
-
+import onvif_control
 
 class SettingWindow(QDialog):
     def __init__(self):
@@ -139,10 +139,13 @@ class MainDialog(QMainWindow):
         self.timer.timeout.connect(self.send_data)
         self.timer.timeout.connect(self.update_base_info)
         self.timer.start(100)
+        self.timer2 = QTimer()
+        self.timer2.timeout.connect(self.send_camera_data)
+        self.timer2.start(50)
         self.timer1 = QTimer()  # 定时器
         self.timer1.timeout.connect(self.update)
         self.timer1.timeout.connect(self.paint_angle)  # 更新角度
-        self.timer1.start(1000)  # 每1s 更新一次
+        self.timer1.start(500)  # 每1s 更新一次
         self.sonar_obj = SonarThread(parent=None, run_func=self.open_sonar)
         # 写入视频
         self.is_write_frame_front = False  # 当前写入视频标志位
@@ -151,7 +154,7 @@ class MainDialog(QMainWindow):
         self.write_frame_back_show_msg = ""  # 保存视频提示字符串成功提示路径 失败提示失败
         # 设置页面
         self.setting_dlg = SettingWindow()
-        # 绑定修改数据
+        # 绑定修改数据信号和槽
         self.connect_single_slot()
         # 前摄后后摄图片
         self.frame_front = None
@@ -186,22 +189,51 @@ class MainDialog(QMainWindow):
         self.joystick_work.start()
         # 更新pid参数
         self.update_pid(value=None)
+        self.video_inter = 0.1  # 显示视频切换图片间隔时间
         self.init_base_ui()
         self.front_video_position = 0  # 前摄视频流位置  0：在中间   1在后摄位置
+        self.is_change_fva = 0  # 改变前摄地址源
+        self.is_change_bva = 0  # 改变后摄地址源
+
+
+
+    @staticmethod
+    def get_ping_delay(ip):
+        (status, output) = subprocess.getstatusoutput('ping %s' % ip)
+        res = re.findall('时间.(.+)ms', output)
+        # res = re.findall('/./d+//(.+)//',output)
+        res = [float(i) for i in res]
+        # 判断网络状况
+        if len(res) == 0:
+            return 0
+        else:
+            return sum(res) / len(res)
 
     def show_front_video(self):
         while True:
+            # 先判断是否能ping通
+            # ping = MainDialog.get_ping_delay('192.168.2.5')
+            # if not ping:
+            #     print('ping front_video',ping)
+            #     continue
+            print('前摄地址',config.front_video_src)
             cap = cv2.VideoCapture(config.front_video_src)
             if not cap.isOpened():
+                print('cap.isOpened()', cap.isOpened())
                 time.sleep(1)
                 continue
+            # 如果是因为修改视频源重新获取到后将改标志位置位0
+            if self.is_change_fva:
+                self.is_change_fva = 0
             start_time = time.time()
             last_read_time = None
             while True:
                 ret, frame = cap.read()
-                # print(time.time(),'ret',ret)
+                # 判断是否需要中断视频切换地址
+                if self.is_change_fva:
+                    break
                 if ret:
-                    if (time.time() - start_time) > 0.1:
+                    if (time.time() - start_time) > self.video_inter:
                         # 绘制文字
                         w_frame = 1350
                         h_frame = 750
@@ -212,13 +244,13 @@ class MainDialog(QMainWindow):
                                 elif v[0] == 1:
                                     w = int(w_frame / 2)
                                 else:
-                                    w = w_frame - 20*len(v[2])
+                                    w = w_frame - 20 * len(v[2])
                                 if v[1] == 0:
                                     h = 100
                                 elif v[1] == 1:
                                     h = int(h_frame / 2)
                                 else:
-                                    h = h_frame - 20*len(v[2])
+                                    h = h_frame - 20 * len(v[2])
                                 # 判断是否包含中文
                                 if is_contain_chinese(v[2]):
                                     fontpath = "./simsun.ttc"  # <== 这里是宋体字体路径
@@ -248,14 +280,29 @@ class MainDialog(QMainWindow):
 
     def show_back_video(self):
         while True:
+            # 如果不存在后摄
+            if not config.back_video_src:
+                time.sleep(3)
+                continue
+            # 先判断是否能ping通
+            ping = MainDialog.get_ping_delay('192.168.2.6')
+            if not ping:
+                print('ping front_video', ping)
+                continue
             cap = cv2.VideoCapture(config.back_video_src)
             if not cap.isOpened():
                 time.sleep(1)
                 continue
+            # 如果是因为修改视频源重新获取到后将改标志位置位0
+            if self.is_change_bva:
+                self.is_change_bva = 0
             start_time = time.time()
             while True:
                 ret, frame = cap.read()
                 # print(time.time(),'ret',ret)
+                # 判断是否需要中断视频切换地址
+                if self.is_change_fva:
+                    break
                 if ret:
                     if (time.time() - start_time) > 0.13:
                         # 绘制文字
@@ -315,7 +362,7 @@ class MainDialog(QMainWindow):
         # result = result[..., :3]
         # self.frame_front = result
         # print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
-        if self.front_video_position == 0:
+        if self.front_video_position == 0:  # 是否需要交换视频位置
             self.ui.front_video_label.setPixmap(pix_image)
         else:
             self.ui.back_video_label.setPixmap(pix_image)
@@ -344,9 +391,10 @@ class MainDialog(QMainWindow):
         绘制陀螺仪角度
         :return:
         """
+
         # self.ui.angle_x_label.setScaledContents(True)
         self.draw_angle_obj.draw_y(self.datamanager_obj.tcp_server_obj.theta_list[1])
-        self.draw_angle_obj.draw_z(self.datamanager_obj.tcp_server_obj.theta_list[2])
+        self.draw_angle_obj.draw_z(360-self.datamanager_obj.tcp_server_obj.theta_list[2])
         if os.path.exists(config.save_angle_y_path):
             pix_y = QPixmap(config.save_angle_y_path)
             self.ui.angle_y_label.setPixmap(pix_y)
@@ -377,7 +425,7 @@ class MainDialog(QMainWindow):
         self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.front_label.setFont(QFont('Arial', 16))
         self.ui.front_label.setStyleSheet("color:rgb(255,255,255,255)")
-        self.ui.logo_label.setFont(QFont('Arial', 18,QFont.Bold))
+        self.ui.logo_label.setFont(QFont('Arial', 18, QFont.Bold))
         self.ui.logo_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.leak_label.setFont(QFont('Arial', 16))
         self.ui.leak_label.setStyleSheet("color:rgb(255,255,255,255)")
@@ -420,7 +468,7 @@ class MainDialog(QMainWindow):
         self.ui.robot_text_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.joystick_text_label.setFont(QFont('Arial', 16))
         self.ui.joystick_text_label.setStyleSheet("color:rgb(255,255,255,255)")
-        self.ui.auto_label.setFont(QFont('Arial',20, 16))
+        self.ui.auto_label.setFont(QFont('Arial', 20, 16))
         self.ui.auto_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.auto_deep_label.setFont(QFont('Arial', 16))
         self.ui.auto_deep_label.setStyleSheet("color:rgb(193,113,4,255)")
@@ -434,8 +482,10 @@ class MainDialog(QMainWindow):
         # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.move_direction_btn.setFont(QFont('Arial', 16))
         # self.ui.back_label.setStyleSheet("color:rgb(255,255,255,255)")
-        self.ui.v_label.setFont(QFont('Arial', 16))
-        self.ui.v_label.setStyleSheet("color:rgb(255,255,255,255)")
+        # self.ui.v_label.setFont(QFont('Arial', 16))
+        # self.ui.v_label.setStyleSheet("color:rgb(255,255,255,255)")
+        self.ui.auto_keep_label.setFont(QFont('Arial', 16))
+        self.ui.auto_keep_label.setStyleSheet("color:rgb(193,113,4,255)")
         self.ui.sonar_text_label.setFont(QFont('Arial', 16))
         self.ui.sonar_text_label.setStyleSheet("color:rgb(255,255,255,255)")
         self.ui.direct_x_label.setFont(QFont('Arial', 16))
@@ -448,8 +498,8 @@ class MainDialog(QMainWindow):
         self.ui.front_camera_video.setCheckable(True)
         self.ui.back_camera_video.setCheckable(True)
         # 设置当前显示视频地址
-        self.setting_dlg.ui.fva_line_edit.setText(str(config.front_video_src))
-        self.setting_dlg.ui.bva_line_edit.setText(str(config.back_video_src))
+        # self.setting_dlg.ui.fva_line_edit.setText(str(config.front_video_src))
+        # self.setting_dlg.ui.bva_line_edit.setText(str(config.back_video_src))
         # 摄像头图标设置
         self.ui.front_camera_cap.setText('')
         self.ui.front_camera_cap.setFixedWidth(32)
@@ -518,7 +568,7 @@ class MainDialog(QMainWindow):
         self.ui.front_video_label.setLineWidth(5)
         # 设置背景颜色，包括边框颜色
         self.ui.front_video_label.setStyleSheet('border-width: 1px;border-style: solid;border-color: rgb(255, 170, 0);')
-        print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
+        # print(self.ui.front_video_label.width(), self.ui.front_video_label.height())
         self.ui.front_video_label.setScaledContents(True)  # 设置图片自动适应标签大小
         self.ui.back_video_label.setFixedWidth(446)
         self.ui.back_video_label.setFixedHeight(223)
@@ -532,6 +582,16 @@ class MainDialog(QMainWindow):
         # 设置背景颜色，包括边框颜色
         self.ui.back_video_label.setStyleSheet('border-width: 1px;border-style: solid;border-color: rgb(255, 170, 0);')
         self.ui.back_video_label.setScaledContents(True)  # 设置图片自动适应标签大小
+        if os.path.exists(config.img_path):
+            if not config.back_video_src:
+                # print('self.ui.back_video_label.size()', self.ui.back_video_label.size())
+                self.ui.back_video_label.setPixmap(QPixmap(config.img_path))
+                self.ui.back_video_label.setScaledContents(True)
+            else:
+                print(config.back_video_src, 'config.back_video_src')
+        # 设置时间间隔初始值
+        self.setting_dlg.ui.info_inter_line_edit.setText(str(self.datamanager_obj.info_inter))
+        self.setting_dlg.ui.video_inter_line_edit.setText(str(self.video_inter))
 
     # 初始化背景图片
     def init_image(self):
@@ -549,10 +609,12 @@ class MainDialog(QMainWindow):
         self.ui.setting_btn.clicked.connect(self.update_pid)
         # 修改设置数据
         self.ui.setting_btn.clicked.connect(self.update_setting_data)
-        # 打开关闭tcp服务和打开关闭遥控
-        self.setting_dlg.ui.start_server_btn.clicked.connect(self.start_server)
-        self.setting_dlg.ui.start_joystick_btn.clicked.connect(self.start_joystick)
-        self.setting_dlg.ui.close_joystick_btn.clicked.connect(self.close_joystick)
+        # 设置控制方式
+        self.setting_dlg.ui.single_control_btn.clicked.connect(self.single_control)
+        self.setting_dlg.ui.mix_control_btn.clicked.connect(self.mix_control)
+        # 设置视频来源
+        self.setting_dlg.ui.fva_button.clicked.connect(self.fva_video_source)
+        self.setting_dlg.ui.bva_button.clicked.connect(self.bva_video_source)
         # pid参数改变
         self.setting_dlg.ui.h_p_slider.valueChanged.connect(self.update_pid)
         self.setting_dlg.ui.h_i_slider.valueChanged.connect(self.update_pid)
@@ -570,8 +632,8 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.text1_button.clicked.connect(self.update_frame_text)
         self.setting_dlg.ui.text2_button.clicked.connect(self.update_frame_text)
         self.setting_dlg.ui.text3_button.clicked.connect(self.update_frame_text)
-        self.setting_dlg.ui.fva_button.clicked.connect(self.update_video_address)
-        self.setting_dlg.ui.bva_button.clicked.connect(self.update_video_address)
+        # self.setting_dlg.ui.fva_button.clicked.connect(self.update_video_address)
+        # self.setting_dlg.ui.bva_button.clicked.connect(self.update_video_address)
         # 打开声呐
         self.ui.open_sonar_btn.clicked.connect(self.open_sonar)
         # 定向和定深
@@ -580,6 +642,36 @@ class MainDialog(QMainWindow):
         self.ui.keep_deep_btn.clicked.connect(self.deep_direction)
         self.ui.move_deep_btn.clicked.connect(self.deep_direction)
         self.ui.switch_video_button.clicked.connect(self.change_front_video_position)
+        # 设置可拖动
+        self.ui.back_video_label.installEventFilter(self.ui.back_video_label)
+        self.ui.back_video_label.setAcceptDrops(True)
+        # 设置消息间隔
+        self.setting_dlg.ui.video_inter_btn.clicked.connect(self.update_interval)
+        self.setting_dlg.ui.info_inter_btn.clicked.connect(self.update_interval)
+        # 定深按钮
+        self.ui.keep_deep_btn.clicked.connect(self.auto_keep_deep)
+        self.ui.move_deep_btn.clicked.connect(self.auto_keep_deep)
+
+    # 定深回调
+    def auto_keep_deep(self):
+        if self.ui.keep_deep_btn.isChecked() or self.ui.move_deep_btn.isChecked():
+            self.datamanager_obj.deep_mode = 2
+        else:
+            self.datamanager_obj.deep_mode = 0
+
+    # 调试消息发送间隔
+    def update_interval(self):
+        try:
+            video_inter = float(self.setting_dlg.ui.video_inter_line_edit.text())
+            if 0 < video_inter < 1:
+                self.video_interval = video_inter
+            print('video_inter', video_inter, type(video_inter), self.video_interval)
+            info_inter = float(self.setting_dlg.ui.info_inter_line_edit.text())
+            if 0 < info_inter < 1:
+                self.datamanager_obj.info_inter = info_inter
+            print('info_inter', info_inter, type(info_inter), self.datamanager_obj.info_inter)
+        except Exception as e_convert:
+            pass  # 转化为浮点数出错是忽略
 
     # 更新视频位置回调函数
     def change_front_video_position(self):
@@ -712,6 +804,13 @@ class MainDialog(QMainWindow):
             self.setting_dlg.ui.v_d_label.setText('v_d:' + str(value / 10.0))
             self.datamanager_obj.pid_v[0] = float(value / 10.0)
         else:
+            # 修改视频使用索引
+            self.setting_dlg.ui.fva_combo_box.setCurrentIndex(config.out_video)
+            self.setting_dlg.ui.bva_combo_box.setCurrentIndex(config.back_video)
+            if config.control_method == 1:
+                self.setting_dlg.ui.single_control_btn.setChecked(True)
+            else:
+                self.setting_dlg.ui.mix_control_btn.setChecked(True)
             update = False
             data = save_data.get_data(config.save_pid_path)
             if data:
@@ -738,30 +837,69 @@ class MainDialog(QMainWindow):
         self.setting_dlg.ui.ip_address_label.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip + \
                                                          ':' + str(self.datamanager_obj.tcp_server_obj.bind_port)))
 
-        self.setting_dlg.ui.joystick_label.setText('遥控:' + str(self.datamanager_obj.joystick_obj.joy_obj.count))
+    def single_control(self):
+        config.control_method = 1
+        control_method_json = {
+            'f': config.out_video,
+            'b': config.back_video,
+            'c': 1,
+        }
+        save_data.set_data(control_method_json, config.save_video_path)
+        print('config.control_method', config.control_method)
+        print('config.single_control_btn', self.setting_dlg.ui.single_control_btn.isChecked())
 
-    def start_server(self):
-        self.setting_dlg.ui.ip_address_line_edit.setText(str(self.datamanager_obj.tcp_server_obj.bind_ip))
-        print('start_server')
+    def mix_control(self):
+        config.control_method = 2
+        control_method_json = {
+            'f': config.out_video,
+            'b': config.back_video,
+            'c': 2,
+        }
+        save_data.set_data(control_method_json, config.save_video_path)
+        print('config.control_method', config.control_method)
+        print('config.mix_control_btn', self.setting_dlg.ui.mix_control_btn.isChecked())
 
-    def close_server(self):
-        self.datamanager_obj.tcp_server_obj.close()
-        print('close_server')
+    # 设置前摄视频源
+    def fva_video_source(self):
+        if config.front_video_src != config.video_src_dict['f'][self.setting_dlg.ui.fva_combo_box.currentIndex()]:
+            # 修改视频地址并设置需要修改地址
+            config.front_video_src = config.video_src_dict['f'][self.setting_dlg.ui.fva_combo_box.currentIndex()]
+            self.is_change_fva = 1
+            config.out_video = self.setting_dlg.ui.fva_combo_box.currentIndex()
+            print('os.path.exists(config.save_video_path)', os.path.exists(config.save_video_path))
+            if self.setting_dlg.ui.single_control_btn.isChecked():
+                control_method = 1
+            else:
+                control_method = 2
+            video_json = {
+                'f': self.setting_dlg.ui.fva_combo_box.currentIndex(),
+                'b': self.setting_dlg.ui.bva_combo_box.currentIndex(),
+                'c': control_method
+            }
+            save_data.set_data(video_json, config.save_video_path)
 
-    def start_joystick(self):
-        print('start_server')
-        # print(self.datamanager_obj.joystick_obj.b_connect)
-        # if not self.datamanager_obj.joystick_obj.b_connect:
-        #     self.datamanager_obj.joystick_obj.init_joystick()
-        #     print(self.datamanager_obj.joystick_obj.count)
-        #     if self.datamanager_obj.joystick_obj.count >= 1:
-        #         self.joystick_work = WorkerThread(parent=None, run_func=self.datamanager_obj.joystick_obj.get_data)
-        #         # self.work.finish.connect(self.showResult)
-        #         self.joystick_work.start()
+        print('前摄视频索引', self.setting_dlg.ui.fva_combo_box.currentIndex())
+        print('前摄视频地址', config.front_video_src)
 
-    def close_joystick(self):
-        # TODO
-        print('close_joystick')
+    # 设置后摄视频源
+    def bva_video_source(self):
+        if config.back_video_src != config.video_src_dict['b'][self.setting_dlg.ui.bva_combo_box.currentIndex()]:
+            # 修改视频地址并设置需要修改地址
+            config.back_video_src = config.video_src_dict['b'][self.setting_dlg.ui.bva_combo_box.currentIndex()]
+            self.is_change_bva = 1
+            config.back_video = self.setting_dlg.ui.bva_combo_box.currentIndex()
+            if self.setting_dlg.ui.single_control_btn.isChecked():
+                control_method = 1
+            else:
+                control_method = 2
+            video_json = {
+                'f': self.setting_dlg.ui.fva_combo_box.currentIndex(),
+                'b': self.setting_dlg.ui.bva_combo_box.currentIndex(),
+                'c': control_method
+            }
+            save_data.set_data(video_json, config.save_video_path)
+        print('后摄视频索引', self.setting_dlg.ui.bva_combo_box.currentIndex())
+        print('后摄视频地址', config.back_video_src)
 
     def display_front_video(self, url, label):
         """显示前置摄像头视频"""
@@ -891,13 +1029,18 @@ class MainDialog(QMainWindow):
                     self.update()
                     start_time = time.time()
 
-    # 发送数据
+    # 发送给下位机数据
     def send_data(self):
         if self.datamanager_obj.tcp_server_obj.b_connect:
             self.datamanager_obj.send_tcp_data(b_once=True)
         # 测试显示数据
         # print('front_video_label', self.ui.front_video_label.size())
         # print('back_video_label', self.ui.back_video_label.size())
+
+    # 发送给摄像头数据
+    def send_camera_data(self):
+        if self.datamanager_obj.b_camera_connect:
+            self.datamanager_obj.send_camera_data(b_once=True)
 
     # 显示数据
     def update_base_info(self):
@@ -968,24 +1111,29 @@ class MainDialog(QMainWindow):
         # 设置运动模式提示停止
         control_info_dict = {0: '停止', 1: '前进', 2: '后退', 3: '左转', 4: '右转', 5: '上升', 6: '下降', 7: '左移',
                              8: '右移'}
-        info=0
-        if 0<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<45 or 315<self.datamanager_obj.joystick_obj.joy_obj.angle_left<360:
-            info=1
-        elif 45<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<135:
+        info = 0
+        if 0 <= self.datamanager_obj.joystick_obj.joy_obj.angle_left < 45 or 315 < self.datamanager_obj.joystick_obj.joy_obj.angle_left < 360:
+            info = 1
+        elif 45 <= self.datamanager_obj.joystick_obj.joy_obj.angle_left < 135:
             info = 3
-        elif 135<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<225:
+        elif 135 <= self.datamanager_obj.joystick_obj.joy_obj.angle_left < 225:
             info = 2
-        elif 225<=self.datamanager_obj.joystick_obj.joy_obj.angle_left<315:
+        elif 225 <= self.datamanager_obj.joystick_obj.joy_obj.angle_left < 315:
             info = 4
         else:
-            info=0
-        if self.datamanager_obj.joystick_obj.joy_obj.move!=9:
-            info=self.datamanager_obj.joystick_obj.joy_obj.move
+            info = 0
+        if self.datamanager_obj.joystick_obj.joy_obj.move != 9:
+            info = self.datamanager_obj.joystick_obj.joy_obj.move
         mode_str = control_info_dict[info]
         self.ui.mode_img_btn.setStyleSheet("QPushButton{border-image: url(:/icons/uuvImages/%s.png)}" % mode_str)
         self.ui.auto_deep_label.setText(" 深度: %f " % 1)
         self.ui.auto_direction_label.setText(" 航向: %f" % 1)
-
+        if self.datamanager_obj.deep_mode!=0:
+            self.ui.auto_keep_label.setText("悬停")
+        elif self.datamanager_obj.joystick_obj.joy_obj.mode!=0:
+            self.ui.auto_keep_label.setText("自稳")
+        else:
+            self.ui.auto_keep_label.setText("")
     # 获取保存数据路径
     def get_path(self, b_save_img=True, b_front=True):
         """
@@ -1111,12 +1259,14 @@ class MainDialog(QMainWindow):
                 print('前摄无数据')
                 return '前摄无数据'
             else:
-                cv2.imwrite(save_path, self.frame_front)
+                save_frame_front = self.frame_front[:, :, (2,1, 0)]
+                cv2.imwrite(save_path, save_frame_front)
         else:
             if self.frame_back is None:
                 print('后摄无数据')
                 return '后摄无数据'
-            cv2.imwrite(save_path, self.frame_back)
+            save_frame_back = self.frame_back[:, :, (2, 1, 0)]
+            cv2.imwrite(save_path, save_frame_back)
 
     # 保存视频
     def save_video(self, front=True, save_path=None):
@@ -1215,6 +1365,42 @@ class MainDialog(QMainWindow):
         elif keyevent.text() in ['m', 'M']:
             self.datamanager_obj.arm = 4
 
+    def dragEnterEvent(self, event):  # 拖动开始时，以及刚进入目标控件时调用
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()  # 返回一个ulr路径列表
+            if len(urls) > 0:
+                # 记录数据并显示
+                img_path = urls[0].toLocalFile()
+                print('图片地址', img_path)
+                if os.path.exists(img_path):
+                    save_data.set_data({'img_path': img_path}, config.save_img_path)
+                    if not config.back_video_src:
+                        self.ui.back_video_label.setPixmap(QPixmap(img_path))
+
+        # 以上三行只是为了演示，若拖动文件到程序，如何获取文件的全路径
+        event.ignore()
+
+    def dropEvent(self, event):
+        print("dropEvent ,%s" % self.objectName())
+        # print(event.mimeData() .formats())
+        if event.mimeData().hasFormat('application/x-阿猫'):
+            data = event.mimeData().data('application/x-阿猫')
+            stream = QDataStream(data, QIODevice.ReadOnly)
+            text = str()
+            icon = QIcon()
+            text = stream.readQString()  # 读出数据流中的字符串
+            stream >> icon  # 读出数据流中的图标数据
+            item = QListWidgetItem(text, self)
+            item.setIcon(icon)
+            # print(event.source())
+            event.accept()
+        else:
+            event.ignore()
+
+    # 确保startDrag被调用的最简单的方法就是对mouseMoveEvent()重新实现
+    def mouseMoveEvent(self, event):
+        print("mouseMoveEvent")
+
 
 if __name__ == '__main__':
     myapp = QApplication(sys.argv)
@@ -1222,7 +1408,8 @@ if __name__ == '__main__':
 
     # main_windows.resize(1920, 1080)
     # main_windows.resize(1800, 700)
-    main_windows.setStyleSheet("#MainWindow{border-image: url(:/icons/uuvImages/背景.png)}")  # 设置背景图 url(:/icons/uuvImages/录像停止.png)
+    main_windows.setStyleSheet(
+        "#MainWindow{border-image: url(:/icons/uuvImages/背景.png)}")  # 设置背景图 url(:/icons/uuvImages/录像停止.png)
     # main_windows.setStyleSheet("#MainWindow{border-image:url(uuvImages/背景.png);}")  # 设置背景图
     # setting_dlg = SettingWindow()
     # btn = main_windows.ui.setting_btn
@@ -1231,8 +1418,6 @@ if __name__ == '__main__':
     # apply_stylesheet(myapp, theme='light_red.xml')
     main_windows.show()
     sys.exit(myapp.exec_())
-
-
 
 """
 生成res资源命令

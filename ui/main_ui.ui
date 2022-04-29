@@ -10,10 +10,16 @@
     <height>745</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>水下机器人</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="acceptDrops">
+    <bool>true</bool>
+   </property>
    <property name="layoutDirection">
     <enum>Qt::RightToLeft</enum>
    </property>
@@ -57,7 +63,7 @@
        <item>
         <widget class="QLabel" name="label_5">
          <property name="text">
-          <string>  </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -160,7 +166,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string> </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -191,7 +197,7 @@
        <item>
         <widget class="QLabel" name="label_6">
          <property name="text">
-          <string>  </string>
+          <string/>
          </property>
         </widget>
        </item>
@@ -285,9 +291,9 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="v_label">
+        <widget class="QLabel" name="auto_keep_label">
          <property name="text">
-          <string> 电压: </string>
+          <string>1111111111</string>
          </property>
         </widget>
        </item>
@@ -413,6 +419,9 @@
     </item>
     <item>
      <widget class="QGroupBox" name="groupBox_3">
+      <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
       <property name="title">
        <string/>
       </property>
@@ -434,6 +443,9 @@
        </property>
        <item>
         <widget class="QGroupBox" name="groupBox_4">
+         <property name="acceptDrops">
+          <bool>true</bool>
+         </property>
          <property name="title">
           <string/>
          </property>
@@ -455,6 +467,9 @@
           </property>
           <item>
            <widget class="QGroupBox" name="groupBox_5">
+            <property name="acceptDrops">
+             <bool>true</bool>
+            </property>
             <property name="title">
              <string/>
             </property>
@@ -476,6 +491,9 @@
              </property>
              <item>
               <widget class="QLabel" name="back_video_label">
+               <property name="acceptDrops">
+                <bool>true</bool>
+               </property>
                <property name="text">
                 <string/>
                </property>

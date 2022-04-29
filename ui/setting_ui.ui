@@ -261,20 +261,6 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QLineEdit" name="ip_address_line_edit"/>
-         </item>
-         <item row="1" column="1">
-          <widget class="QPushButton" name="start_server_btn">
-           <property name="text">
-            <string>开启服务端</string>
-           </property>
-           <property name="icon">
-            <iconset>
-             <normaloff>:/icon/statics/resource/icon/arrow-000.png</normaloff>:/icon/statics/resource/icon/arrow-000.png</iconset>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -285,23 +271,41 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QLabel" name="joystick_label">
+          <widget class="QLabel" name="control_label">
            <property name="text">
-            <string>遥控</string>
+            <string>控制方式</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="start_joystick_btn">
+          <widget class="QPushButton" name="single_control_btn">
            <property name="text">
-            <string>打开遥控</string>
+            <string>单控</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="close_joystick_btn">
+          <widget class="QPushButton" name="mix_control_btn">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
            <property name="text">
-            <string>关闭遥控</string>
+            <string>混控</string>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -322,7 +326,23 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="fva_line_edit"/>
+          <widget class="QComboBox" name="fva_combo_box">
+           <item>
+            <property name="text">
+             <string>外置摄像头</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>内置舵机摄像头</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>内置大摄像头</string>
+            </property>
+           </item>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="fva_button">
@@ -363,37 +383,40 @@
         <property name="title">
          <string>GroupBox</string>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_6">
-         <item>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>w:前进 a 左转 s 后退  d 右转   z 上浮 c 下沉   q 左移 e 右移  x停止</string>
-           </property>
-           <property name="wordWrap">
-            <bool>true</bool>
+            <string>info</string>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QLabel" name="label_9">
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="info_inter_line_edit"/>
+         </item>
+         <item row="0" column="2">
+          <widget class="QPushButton" name="info_inter_btn">
            <property name="text">
-            <string>摄像头舵机  y 上仰  h 停止    n 下俯</string>
+            <string>确定</string>
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>机械臂  u 打开 j 停止    m 关闭</string>
-           </property>
-          </widget>
-         </item>
-         <item>
+         <item row="1" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>r 自稳   g 声呐继电器   t  pwm灯光</string>
+            <string>video</string>
            </property>
           </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QPushButton" name="video_inter_btn">
+           <property name="text">
+            <string>确定</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="video_inter_line_edit"/>
          </item>
         </layout>
        </widget>
@@ -443,7 +466,7 @@
             <item>
              <widget class="QLabel" name="h_p_label">
               <property name="text">
-               <string>h_p</string>
+               <string> h_p </string>
               </property>
              </widget>
             </item>
@@ -481,7 +504,7 @@
             <item>
              <widget class="QLabel" name="h_i_label">
               <property name="text">
-               <string>h_i</string>
+               <string> h_i </string>
               </property>
              </widget>
             </item>
@@ -519,7 +542,7 @@
             <item>
              <widget class="QLabel" name="h_d_label">
               <property name="text">
-               <string>h_d</string>
+               <string> h_d </string>
               </property>
              </widget>
             </item>
@@ -563,10 +586,25 @@
             <string/>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QLabel" name="v_p_label">
               <property name="text">
-               <string>v_p</string>
+               <string> v_p </string>
               </property>
              </widget>
             </item>
@@ -586,10 +624,25 @@
             <string/>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QLabel" name="v_i_label">
               <property name="text">
-               <string>v_i</string>
+               <string> v_i </string>
               </property>
              </widget>
             </item>
@@ -609,10 +662,25 @@
             <string/>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_10">
+            <property name="spacing">
+             <number>0</number>
+            </property>
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="QLabel" name="v_d_label">
               <property name="text">
-               <string>v_d</string>
+               <string> v_d </string>
               </property>
              </widget>
             </item>
@@ -643,7 +711,18 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="bva_line_edit"/>
+          <widget class="QComboBox" name="bva_combo_box">
+           <item>
+            <property name="text">
+             <string>无</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>外置摄像头</string>
+            </property>
+           </item>
+          </widget>
          </item>
          <item>
           <widget class="QPushButton" name="bva_button">

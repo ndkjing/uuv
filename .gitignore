@@ -5,6 +5,12 @@
 build
 build/
 build/*
+build11
+build11/
+build12
+build12/
+build13
+build13/
 .idea
 .idea/
 *.pyc
